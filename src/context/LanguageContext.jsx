@@ -116,19 +116,25 @@ function applyTranslation(lang) {
   const val = `/en/${lang}`;
 
   if (lang === "en") {
-    // Clear cookies
-    document.cookie = `googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
-    document.cookie = `googtrans=; path=/; domain=${domain}; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
-    document.cookie = `googtrans=; path=/; domain=.${domain}; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
+    // Explicitly set to English to English to force reset
+    const resetVal = "/en/en";
+    document.cookie = `googtrans=${resetVal}; path=/;`;
+    document.cookie = `googtrans=${resetVal}; path=/; domain=${domain}`;
+    document.cookie = `googtrans=${resetVal}; path=/; domain=.${domain}`;
+    
+    // Also try to clear any legacy cookies
+    const expire = "expires=Thu, 01 Jan 1970 00:00:00 UTC";
+    document.cookie = `googtrans=; path=/; ${expire}`;
+    document.cookie = `googtrans=; path=/; domain=${domain}; ${expire}`;
+    document.cookie = `googtrans=; path=/; domain=.${domain}; ${expire}`;
   } else {
-    // Set cookies
+    // Set cookies for target language
     document.cookie = `googtrans=${val}; path=/`;
     document.cookie = `googtrans=${val}; path=/; domain=${domain}`;
     document.cookie = `googtrans=${val}; path=/; domain=.${domain}`;
   }
 
-  // Mandatory reload because Google Translate extension/widget 
-  // needs a fresh start to correctly detect and apply (or remove) translations.
+  // Mandatory reload for Google Translate to re-read the cookies
   window.location.reload();
 }
 
