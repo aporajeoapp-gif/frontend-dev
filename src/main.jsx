@@ -1,8 +1,7 @@
 import { StrictMode, Component } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-// import App from './App.jsx'
-import Maintenance from './Maintenance.jsx'
+import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
 
 class ErrorBoundary extends Component {
@@ -60,7 +59,9 @@ if (typeof Node === 'function' && Node.prototype) {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
-      <Maintenance />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </ErrorBoundary>
   </StrictMode>,
 )
