@@ -112,29 +112,43 @@ const TRANSLATIONS = {
 };
 
 function applyTranslation(lang) {
-  const domain = window.location.hostname;
+  const hostname = window.location.hostname;
   const val = `/en/${lang}`;
 
-  if (lang === "en") {
-    // Explicitly set to English to English to force reset
-    const resetVal = "/en/en";
-    document.cookie = `googtrans=${resetVal}; path=/;`;
-    document.cookie = `googtrans=${resetVal}; path=/; domain=${domain}`;
-    document.cookie = `googtrans=${resetVal}; path=/; domain=.${domain}`;
-    
-    // Also try to clear any legacy cookies
+  const setCookie = (v, d) => {
+    let str = `googtrans=${v}; path=/;`;
+    if (d) str += ` domain=${d};`;
+    document.cookie = str;
+  };
+
+  const clearCookie = (d) => {
     const expire = "expires=Thu, 01 Jan 1970 00:00:00 UTC";
-    document.cookie = `googtrans=; path=/; ${expire}`;
-    document.cookie = `googtrans=; path=/; domain=${domain}; ${expire}`;
-    document.cookie = `googtrans=; path=/; domain=.${domain}; ${expire}`;
+    let str = `googtrans=; path=/; ${expire};`;
+    if (d) str += ` domain=${d};`;
+    document.cookie = str;
+  };
+
+  if (lang === "en") {
+    // 1. Force set /en/en to current host
+    setCookie("/en/en", "");
+    setCookie("/en/en", hostname);
+
+    // 2. Aggressive wipe for all possible variations
+    const domainParts = hostname.split('.');
+    while (domainParts.length > 0) {
+      const d = domainParts.join('.');
+      clearCookie(d);
+      clearCookie("." + d);
+      domainParts.shift();
+    }
   } else {
-    // Set cookies for target language
-    document.cookie = `googtrans=${val}; path=/`;
-    document.cookie = `googtrans=${val}; path=/; domain=${domain}`;
-    document.cookie = `googtrans=${val}; path=/; domain=.${domain}`;
+    // Set cookie for the target language (e.g. /en/bn)
+    setCookie(val, "");
+    setCookie(val, hostname);
   }
 
-  // Mandatory reload for Google Translate to re-read the cookies
+  // Ensure state is saved before reload
+  localStorage.setItem("language", lang);
   window.location.reload();
 }
 
@@ -145,9 +159,15 @@ function getLangFromCookie() {
 
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
+    // Prioritize localStorage to ensure UI state is preserved after reload
+    const fromLS = localStorage.getItem("language");
+    if (fromLS) return fromLS;
+
+    // Fallback to cookie for external/initial visits
     const fromCookie = getLangFromCookie();
     if (fromCookie !== "en") return fromCookie;
-    return localStorage.getItem("language") || "en";
+    
+    return "en";
   });
 
   const toggleLanguage = () => {
