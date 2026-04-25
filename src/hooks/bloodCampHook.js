@@ -33,7 +33,7 @@ export const useBloodCamp = () => {
     }
   }, []);
 
-  const createCamp = async (data) => {
+  const createCamp = useCallback(async (data) => {
     setLoading(true);
     try {
       await bloodCampApi.createCamp(data);
@@ -44,9 +44,9 @@ export const useBloodCamp = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchCamps]);
 
-  const updateCamp = async (id, data) => {
+  const updateCamp = useCallback(async (id, data) => {
     setLoading(true);
     try {
       await bloodCampApi.updateCamp(id, data);
@@ -57,9 +57,9 @@ export const useBloodCamp = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchCamps]);
 
-  const deleteCamp = async (id) => {
+  const deleteCamp = useCallback(async (id) => {
     setLoading(true);
     try {
       await bloodCampApi.deleteCamp(id);
@@ -70,24 +70,45 @@ export const useBloodCamp = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchCamps]);
 
-  const addDonor = async (data) => {
+  const addDonor = useCallback(async (data) => {
     setLoading(true);
-    console.log("Hook: Adding donor...", data);
     try {
       const response = await bloodCampApi.addDonor(data);
-      console.log("Hook: addDonor Success", response.data);
       return { success: true };
     } catch (err) {
-      console.error("Hook: addDonor Failed", err);
       return { success: false, message: err.response?.data?.message || "Failed to add donor" };
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchDonors = async (campId) => {
+  const publicAddDonor = useCallback(async (data) => {
+    setLoading(true);
+    try {
+      const response = await bloodCampApi.publicAddDonor(data);
+      return { success: true, message: response.data.message };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || "Registration failed" };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const confirmDonorApproval = useCallback(async (id) => {
+    setLoading(true);
+    try {
+      await bloodCampApi.approveDonor(id);
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || "Failed to approve donor" };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchDonors = useCallback(async (campId) => {
     setLoading(true);
     try {
       const response = await bloodCampApi.getCampDonors(campId);
@@ -97,9 +118,9 @@ export const useBloodCamp = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const removeDonor = async (id) => {
+  const removeDonor = useCallback(async (id) => {
     setLoading(true);
     try {
       await bloodCampApi.deleteDonor(id);
@@ -109,7 +130,7 @@ export const useBloodCamp = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return {
     camps,
@@ -121,6 +142,8 @@ export const useBloodCamp = () => {
     updateCamp,
     deleteCamp,
     addDonor,
+    publicAddDonor,
+    confirmDonorApproval,
     fetchDonors,
     removeDonor,
   };

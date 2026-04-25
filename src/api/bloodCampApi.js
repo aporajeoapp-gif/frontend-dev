@@ -35,8 +35,10 @@ const bloodCampApi = {
   },
   deleteCamp: (id) => axiosClient.delete(`/blood-camp/delete-camp/${id}`),
   addDonor: (data) => axiosClient.post("/blood-camp/add-donor", data),
+  publicAddDonor: (data) => axiosClient.post("/blood-camp/public-add-donor", data),
   getCampDonors: (campId) => axiosClient.get(`/blood-camp/get-camp-donors/${campId}`),
   deleteDonor: (id) => axiosClient.delete(`/blood-camp/delete-donor/${id}`),
+  approveDonor: (id) => axiosClient.patch(`/blood-camp/approve-donor/${id}`),
 };
 
 export default bloodCampApi;

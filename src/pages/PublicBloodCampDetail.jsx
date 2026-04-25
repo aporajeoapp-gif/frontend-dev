@@ -42,7 +42,7 @@ const STATUS_META = {
 export default function PublicBloodCampDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { fetchCampById, addDonor, loading } = useBloodCamp();
+  const { fetchCampById, publicAddDonor, loading } = useBloodCamp();
   const [camp, setCamp] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -77,9 +77,9 @@ export default function PublicBloodCampDetail() {
 
     setSubmitting(true);
     try {
-      const res = await addDonor({ ...formData, campId: id });
+      const res = await publicAddDonor({ ...formData, campId: id });
       if (res.success) {
-        successAlert("Registration Successful! Thank you for your contribution.");
+        successAlert(res.message || "Registration Successful! Waiting for admin approval.");
         setShowForm(false);
         setFormData({ name: "", bloodGroup: "", age: "", phone: "", donatedAt: "" });
         loadData();

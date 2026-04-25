@@ -8,8 +8,10 @@ import {
   Users,
   UserPlus,
   Trash2,
+  CheckCircle,
   Image as ImageIcon,
   X,
+  Clock,
 } from "lucide-react";
 import { useBloodCamp } from "../../hooks/bloodCampHook";
 import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
@@ -121,7 +123,7 @@ function DonorForm({ value, onChange }) {
 export default function AdminBloodCampDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { fetchCampById, addDonor, fetchDonors, removeDonor, loading } = useBloodCamp();
+  const { fetchCampById, addDonor, fetchDonors, removeDonor, confirmDonorApproval, loading } = useBloodCamp();
   const [camp, setCamp] = useState(null);
   const [donors, setDonors] = useState([]);
   const [modal, setModal] = useState(null);
@@ -191,6 +193,21 @@ export default function AdminBloodCampDetail() {
       loadData();
     } else {
       errorAlert(res.message);
+    }
+  };
+
+  const handleApproveDonor = async (donorId) => {
+    setSubmitting(true);
+    try {
+      const res = await confirmDonorApproval(donorId);
+      if (res.success) {
+        successAlert("Donor approved and added to collection");
+        loadData();
+      } else {
+        errorAlert(res.message);
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -300,6 +317,9 @@ export default function AdminBloodCampDetail() {
                       Age
                     </th>
                     <th className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                       Date
                     </th>
                     <th className="px-6 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">
@@ -339,18 +359,45 @@ export default function AdminBloodCampDetail() {
                         <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
                           {donor.age}
                         </td>
+                        <td className="px-6 py-4">
+                          {donor.status === 'pending' ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/50">
+                              <span className="w-1 h-1 rounded-full bg-amber-500 animate-pulse" /> Pending
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50">
+                              <CheckCircle size={10} /> Approved
+                            </span>
+                          )}
+                        </td>
                         <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
                           {donor.donatedAt
                             ? new Date(donor.donatedAt).toLocaleDateString()
                             : "N/A"}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button
-                            onClick={() => handleDeleteDonor(donor._id)}
-                            className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 transition-colors"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            {donor.status === 'pending' ? (
+                              <button
+                                onClick={() => handleApproveDonor(donor._id)}
+                                disabled={submitting}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-900/20 active:scale-95 disabled:opacity-50"
+                              >
+                                {submitting ? "..." : <><CheckCircle size={12} /> Approve</>}
+                              </button>
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center text-slate-300 dark:text-slate-700">
+                                <CheckCircle size={14} />
+                              </div>
+                            )}
+                            <button
+                              onClick={() => handleDeleteDonor(donor._id)}
+                              title="Delete Record"
+                              className="p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-900/20 text-slate-400 hover:text-rose-500 transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
