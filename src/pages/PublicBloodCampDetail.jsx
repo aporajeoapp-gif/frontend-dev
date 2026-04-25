@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Heart,
   Image as ImageIcon,
+  X,
 } from "lucide-react";
 import { useBloodCamp } from "../hooks/bloodCampHook";
 import { successAlert, errorAlert } from "../utils/alert";
