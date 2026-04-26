@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, X, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import useDoctors from "../../hooks/doctorhook";
@@ -18,7 +18,7 @@ const EMPTY_FORM = {
   location: "",
   phone: "",
   email: "",
-  experience: "",
+  personalNo: "",
   schedule: [],
 };
 
@@ -123,8 +123,8 @@ function DoctorModal({ mode, form, setForm, onSave, onClose }) {
             </Field>
           </div>
 
-          <Field label="Experience (years)">
-            <input className={inp} type="number" value={form.experience} onChange={set("experience")} placeholder="10" />
+          <Field label="Personal Number">
+            <input className={inp} value={form.personalNo} onChange={set("personalNo")} placeholder="+91-XXXXXXXXXX" />
           </Field>
 
           <ScheduleEditor
@@ -214,7 +214,6 @@ export default function DoctorsPage() {
     if (!form.name || !form.specialty) return;
     const payload = {
       ...form,
-      experience: Number(form.experience),
       schedule: form.schedule.filter((s) => s.day && s.time && s.chamber),
     };
     try {
@@ -287,7 +286,7 @@ export default function DoctorsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800 text-left">
-                {["Doctor", "Specialty", "Location", "Phone", "Experience", "Schedule", (canUpdate || canDelete) && "Actions"]
+                {["Doctor", "Specialty", "Location", "Phone", "Personal No", "Schedule", (canUpdate || canDelete) && "Actions"]
                   .filter(Boolean)
                   .map((col) => (
                     <th key={col} className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide whitespace-nowrap">
@@ -337,9 +336,9 @@ export default function DoctorsPage() {
                       {doc.phone || "—"}
                     </td>
 
-                    {/* Experience */}
+                    {/* Personal Number */}
                     <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">
-                      {doc.experience ? `${doc.experience} yrs` : "—"}
+                      {doc.personalNo || "—"}
                     </td>
 
                     {/* Schedule badge */}

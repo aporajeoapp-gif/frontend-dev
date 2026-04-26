@@ -303,12 +303,12 @@ export default function Home() {
                 >
                   Explore Now <ArrowRight size={16} />
                 </Link>
-                <Link
+                {/* <Link
                   to="/"
                   className="inline-flex items-center gap-2 border-2 border-white/40 text-white font-semibold px-7 py-3.5 rounded-2xl hover:bg-white/10 backdrop-blur-sm transition-all"
                 >
                   Learn More
-                </Link>
+                </Link> */}
               </motion.div>
             </motion.div>
           </AnimatePresence>
@@ -605,8 +605,8 @@ export default function Home() {
             <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
             <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
             <div className="relative z-10 p-10 md:p-16">
-              <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-5 border border-white/30">
-                <Zap size={28} className="text-yellow-300" />
+              <div className="w-44 sm:w-64 mx-auto mb-8">
+                <img src="/logo.png" alt="Logo" className="w-full h-auto object-contain" />
               </div>
               <h2 className="text-3xl sm:text-4xl font-extrabold mb-3">
                 Get in Touch

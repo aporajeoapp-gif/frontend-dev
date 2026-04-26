@@ -14,6 +14,7 @@ import Ferry from "./pages/Ferry";
 import Events from "./pages/Events";
 import BloodDonation from "./pages/BloodDonation";
 import PublicBloodCampDetail from "./pages/PublicBloodCampDetail";
+import BirthdayPopup from "./components/BirthdayPopup";
 
 // Admin Pages
 import AdminLayout from "./admin/AdminLayout";
@@ -53,6 +54,7 @@ function App() {
         <LanguageProvider>
           <AuthProvider>
             <ScrollToTop />
+            <BirthdayPopup />
             <Toaster
               position="top-right"
               // expand={true}

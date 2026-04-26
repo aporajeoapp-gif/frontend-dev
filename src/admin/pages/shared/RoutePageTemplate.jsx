@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
 import Table from "../../components/ui/Table";
 import { confirmDelete, errorAlert, successAlert } from "../../../utils/alert";
@@ -52,7 +52,6 @@ const Modal = ({ open, onClose, title, children }) => {
 const empty = {
   busName: "",
   ferryName: "",
-  routeNumber: "",
   routeName: ["", ""],
   timings: [{ departure: "", arrival: "" }],
   stops: "",
@@ -60,11 +59,7 @@ const empty = {
 };
 
 const columns = [
-  {
-    key: "routeNumber",
-    label: "Route #",
-    render: (v, row) => v || row.ferryNumber || "N/A",
-  },
+
   {
     key: "routeName",
     label: "Route",
@@ -155,7 +150,6 @@ export default function RoutePageTemplate({
   const openEdit = (r) => {
     setForm({
       ...r,
-      routeNumber: r.routeNumber || r.ferryNumber || "",
       routeName: Array.isArray(r.routeName)
         ? r.routeName
         : [r.routeName || "", ""],
@@ -169,8 +163,8 @@ export default function RoutePageTemplate({
   };
 
   const handleSave = async () => {
-    if (!form.routeNumber || !form.routeName[0]) {
-      errorAlert("Please fill in Route Number and Start/End points");
+    if (!form.routeName[0] || !form.routeName[1]) {
+      errorAlert("Please fill in both Start and End points");
       return;
     }
 
@@ -279,7 +273,7 @@ export default function RoutePageTemplate({
             <Table
               columns={columns}
               data={routes}
-              searchKeys={["routeNumber", "routeName"]}
+              searchKeys={["routeName"]}
               actions={(row) => (
                 <div className="flex items-center gap-1">
                   {canUpdate && (
@@ -324,16 +318,6 @@ export default function RoutePageTemplate({
                   })
                 }
                 placeholder="Name (Optional)"
-              />
-            </Field>
-            <Field label="Route Number">
-              <input
-                className={inp}
-                value={form.routeNumber}
-                onChange={(e) =>
-                  setForm({ ...form, routeNumber: e.target.value })
-                }
-                placeholder={placeholder.routeNumber}
               />
             </Field>
           </div>

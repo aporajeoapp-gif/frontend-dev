@@ -48,7 +48,7 @@ export default function Navbar() {
             <img
               src="/logo.png"
               alt="Oporajeo"
-              className="h-10 w-auto object-contain"
+              className="h-7 sm:h-10 w-auto object-contain"
             />
           </Link>
 

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: "https://7l4sl9hi6c.execute-api.ap-south-1.amazonaws.com/api/v1", 
+  baseURL: "https://7l4sl9hi6c.execute-api.ap-south-1.amazonaws.com/api/v1",
 });
 
 

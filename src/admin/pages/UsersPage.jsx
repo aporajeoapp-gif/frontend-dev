@@ -63,6 +63,9 @@ const emptyUser = {
   role: "member",
   status: "active",
   permissions: [],
+  phno: "",
+  address: "",
+  dob: "",
 };
 
 const ROLE_CONFIG = {
@@ -290,7 +293,11 @@ export default function UsersPage() {
       const formData = new FormData();
       Object.keys(form).forEach(key => {
         if (key === "permissions" && Array.isArray(form[key])) {
-          form[key].forEach(p => formData.append("permissions[]", p));
+          if (form[key].length === 0) {
+            formData.append("permissions[]", "__EMPTY__");
+          } else {
+            form[key].forEach(p => formData.append("permissions[]", p));
+          }
         } else if (key === "avatar") {
            if (form[key] instanceof File) {
              formData.append("avatar", form[key]);
@@ -553,6 +560,42 @@ export default function UsersPage() {
                   />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                    Phone Number
+                  </label>
+                  <input
+                    className={inp}
+                    value={form.phno ?? ""}
+                    onChange={(e) => setForm({ ...form, phno: e.target.value })}
+                    placeholder="9876543210"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                    Date of Birth
+                  </label>
+                  <input
+                    className={inp}
+                    type="date"
+                    value={form.dob ?? ""}
+                    onChange={(e) => setForm({ ...form, dob: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                  Address
+                </label>
+                <textarea
+                  className={inp}
+                  value={form.address ?? ""}
+                  onChange={(e) => setForm({ ...form, address: e.target.value })}
+                  placeholder="Full Address"
+                  rows={2}
+                />
+              </div>
               <div className="space-y-1.5">
                 <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
                   {modal.mode === "edit"
@@ -591,7 +634,22 @@ export default function UsersPage() {
                   <select
                     className={inp}
                     value={form.role}
-                    onChange={(e) => setForm({ ...form, role: e.target.value })}
+                    onChange={(e) => {
+                      const newRole = e.target.value;
+                      let newPerms = form.permissions;
+                      
+                      if (newRole === "admin") {
+                        newPerms = RESOURCES.flatMap((r) => ACTIONS.map((a) => pKey(r.key, a)));
+                      } else if (newRole === "member") {
+                        newPerms = [];
+                      }
+                      
+                      setForm({ 
+                        ...form, 
+                        role: newRole, 
+                        permissions: newPerms 
+                      });
+                    }}
                   >
                     {ROLES.map((r) => (
                       <option key={r} value={r}>
@@ -619,10 +677,12 @@ export default function UsersPage() {
                   </select>
                 </div>
               </div>
-              <PermissionMatrix
-                permissions={form.permissions ?? []}
-                onChange={(perms) => setForm({ ...form, permissions: perms })}
-              />
+              {form.role !== "member" && (
+                <PermissionMatrix
+                  permissions={form.permissions ?? []}
+                  onChange={(perms) => setForm({ ...form, permissions: perms })}
+                />
+              )}
               <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button
                   className={btn("secondary")}

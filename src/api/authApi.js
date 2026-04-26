@@ -34,3 +34,7 @@ export const deleteUser = async (id) => {
   const res = await axiosClient.delete(`/user/delete-user/${id}`);
   return res.data;
 };
+export const getBirthdayUsers = async () => {
+  const res = await axiosClient.get("/user/birthday-users");
+  return res.data;
+};

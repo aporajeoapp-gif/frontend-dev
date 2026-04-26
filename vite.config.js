@@ -5,6 +5,6 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   optimizeDeps: {
-    include: ["react-is", "recharts"],
+    include: ["react-is", "recharts", "jspdf", "jspdf-autotable"],
   },
 });

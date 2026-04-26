@@ -74,6 +74,18 @@ const empty = {
   status: "upcoming",
   image: null,
 };
+
+const formatDateForInput = (d) => {
+  if (!d) return "";
+  try {
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "";
+    return date.toISOString().split("T")[0];
+  } catch {
+    return "";
+  }
+};
+
 const categoryColors = {
   Health:
     "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300",
@@ -115,7 +127,11 @@ const { profile } = fetchUser();
     setModal("add");
   };
   const openEdit = (e) => {
-    setForm({ ...e, image: null });
+    setForm({ 
+      ...e, 
+      image: null,
+      date: formatDateForInput(e.date)
+    });
     setPreview(e.image);
     setModal("edit");
   };
@@ -158,12 +174,13 @@ const { profile } = fetchUser();
     }
   };
   const isAdmin = profile?.role === "admin";
+  const isMember = profile?.role === "member";
   const perms = Array.isArray(profile?.permissions) ? profile.permissions : [];
   const hasPerm = (key) => isAdmin || perms.includes(key);
-  const canCreate = hasPerm("events.create");
+  const canCreate = !isMember && hasPerm("events.create");
   const canRead   = hasPerm("events.read");
-  const canUpdate = hasPerm("events.update");
-  const canDelete = hasPerm("events.delete");
+  const canUpdate = !isMember && hasPerm("events.update");
+  const canDelete = !isMember && hasPerm("events.delete");
 
   if (!canRead) {
     return (
@@ -237,7 +254,13 @@ const { profile } = fetchUser();
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                   <Calendar size={11} />
-                  <span>{ev.date}</span>
+                  <span>
+  {new Date(ev.date).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  })}
+</span>
                   <Clock size={11} className="ml-1" />
                   <span>{ev.time}</span>
                 </div>

@@ -82,6 +82,17 @@ const empty = {
   endDate: "",
 };
 
+const formatDateForInput = (d) => {
+  if (!d) return "";
+  try {
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "";
+    return date.toISOString().split("T")[0];
+  } catch {
+    return "";
+  }
+};
+
 export default function AdsPage() {
   const { ads, loading, fetchAds, createAd, updateAd, deleteAd } = useAds();
   const [modal, setModal] = useState(null);
@@ -99,7 +110,12 @@ export default function AdsPage() {
     setModal("add");
   };
   const openEdit = (a) => {
-    setForm({ ...a, image: null });
+    setForm({ 
+      ...a, 
+      image: null,
+      startDate: formatDateForInput(a.startDate),
+      endDate: formatDateForInput(a.endDate)
+    });
     setPreview(a.image);
     setModal("edit");
   };

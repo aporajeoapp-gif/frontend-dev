@@ -300,7 +300,7 @@ export default function AdSection() {
   const { ads, fetchAds, loading } = useAds();
 
   useEffect(() => {
-    fetchAds();
+    fetchAds("active");
   }, [fetchAds]);
 
   if (!loading && ads.length === 0) return null;

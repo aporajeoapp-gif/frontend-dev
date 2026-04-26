@@ -2,6 +2,7 @@ import axiosClient from "./axiosClient";
 
 const eventApi = {
   getAllEvents: () => axiosClient.get("/events/get-all-events"),
+  getLatestEvents: () => axiosClient.get("/events/get-latest-events"),
   createEvent: (data) => {
     const formData = new FormData();
     Object.keys(data).forEach((key) => {

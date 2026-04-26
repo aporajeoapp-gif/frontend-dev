@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Stethoscope, MapPin, Phone, Mail, Award,
@@ -217,7 +217,7 @@ export default function Doctor() {
                       <th className="px-5 py-3 text-left">Doctor</th>
                       <th className="px-5 py-3 text-left">Specialty</th>
                       <th className="px-5 py-3 text-left">Location</th>
-                      <th className="px-5 py-3 text-left">Experience</th>
+                      <th className="px-5 py-3 text-left">Personal No</th>
                       <th className="px-5 py-3 text-left">Actions</th>
                     </tr>
                   </thead>
@@ -258,11 +258,11 @@ export default function Doctor() {
                           </span>
                         </td>
 
-                        {/* experience */}
+                        {/* personal number */}
                         <td className="px-5 py-3">
                           <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                            <Award size={12} className="text-amber-500 shrink-0" />
-                            {doc.experience} yrs
+                             <Phone size={12} className="text-slate-400 shrink-0" />
+                            {doc.personalNo || "—"}
                           </span>
                         </td>
 

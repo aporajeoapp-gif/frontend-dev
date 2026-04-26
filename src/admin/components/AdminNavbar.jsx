@@ -11,13 +11,7 @@ import { useAuth } from "../../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { updateProfile } from "../../api/authApi";
 import { toast } from "sonner";
-
-const NOTIFICATIONS = [
-  { id: 1, text: "New user registered: Rahul Das",       time: "2m ago",  unread: true  },
-  { id: 2, text: "Bus route 201 updated",                time: "15m ago", unread: true  },
-  { id: 3, text: "Event 'Tech Meetup' approved",         time: "1h ago",  unread: false },
-  { id: 4, text: "Advertisement expired: Ferry Pass",    time: "3h ago",  unread: false },
-];
+import eventApi from "../../api/eventApi";
 
 function initials(name = "") {
   const parts = name.trim().split(" ");
@@ -31,6 +25,21 @@ function fmt(dateStr) {
   return new Date(dateStr).toLocaleDateString("en-GB", {
     day: "2-digit", month: "short", year: "numeric",
   });
+}
+
+function timeSince(date) {
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+  let interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + "y ago";
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + "mo ago";
+  interval = seconds / 86400;
+  if (interval > 1) return Math.floor(interval) + "d ago";
+  interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + "h ago";
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + "m ago";
+  return Math.floor(seconds) + "s ago";
 }
 
 /* ── Profile Detail Modal ── */
@@ -157,12 +166,12 @@ function ProfileModal({ user, onClose }) {
                     <h2 className="text-xl font-extrabold text-slate-800 dark:text-white uppercase">
                       {user.name}
                     </h2>
-                    <button
+                    {/* <button
                       onClick={() => setEditing(true)}
                       className="p-1 text-slate-400 hover:text-primary-500 transition-colors"
                     >
                       <Pencil size={12} />
-                    </button>
+                    </button> */}
                   </div>
                   <span className="mt-1.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 capitalize">
                     <Shield size={10} /> {user.role}
@@ -191,12 +200,13 @@ function ProfileModal({ user, onClose }) {
                     ? "text-emerald-600 dark:text-emerald-400 capitalize"
                     : "text-slate-500 capitalize",
                 },
-                {
-                  Icon: Key,
-                  label: "Permissions",
-                  value: user.permissions?.includes("*") ? "Full Access" : user.permissions?.join(", "),
-                },
+                // {
+                //   Icon: Key,
+                //   label: "Permissions",
+                //   value: user.permissions?.includes("*") ? "Full Access" : user.permissions?.join(", "),
+                // },
                 { Icon: Calendar, label: "Joined",       value: fmt(user.createdAt) },
+                { Icon: CheckCircle, label: "Registered Since", value: timeSince(user.createdAt).replace(" ago", "") },
                 { Icon: Clock,    label: "Last Updated", value: fmt(user.updatedAt) },
               ].map(({ Icon, label, value, valueClass }) => (
                 <div
@@ -234,6 +244,7 @@ function ProfileModal({ user, onClose }) {
   );
 }
 
+
 /* ── Main Navbar ── */
 export default function AdminNavbar({ onMenuClick }) {
   const { theme, toggleTheme } = useContext(ThemeContext);
@@ -243,9 +254,25 @@ export default function AdminNavbar({ onMenuClick }) {
   const [dropOpen, setDropOpen]       = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [search, setSearch]           = useState("");
+  const [latestEvents, setLatestEvents] = useState([]);
+  const [unreadNotifs, setUnreadNotifs] = useState(true);
+
   const notifRef   = useRef(null);
   const dropRef    = useRef(null);
   const navigate   = useNavigate();
+
+  useEffect(() => {
+    const fetchNotifs = async () => {
+      try {
+        const res = await eventApi.getLatestEvents();
+        
+        setLatestEvents(res.data || []);
+      } catch (err) {
+        console.error("Failed to fetch notification events:", err);
+      }
+    };
+    fetchNotifs();
+  }, []);
 
   useEffect(() => {
     function handleClick(e) {
@@ -255,8 +282,6 @@ export default function AdminNavbar({ onMenuClick }) {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
-
-  const unreadCount = NOTIFICATIONS.filter((n) => n.unread).length;
 
   const handleLogout = () => {
     logout();
@@ -306,11 +331,14 @@ export default function AdminNavbar({ onMenuClick }) {
           {/* Notifications */}
           <div ref={notifRef} className="relative">
             <button
-              onClick={() => setNotifOpen((v) => !v)}
+              onClick={() => {
+                setNotifOpen((v) => !v);
+                setUnreadNotifs(false);
+              }}
               className="relative p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
             >
               <Bell size={18} />
-              {unreadCount > 0 && (
+              {unreadNotifs && latestEvents.length > 0 && (
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
               )}
             </button>
@@ -320,32 +348,37 @@ export default function AdminNavbar({ onMenuClick }) {
                   initial={{ opacity: 0, y: -8, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
                   className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden"
                 >
                   <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <span className="font-semibold text-sm text-slate-900 dark:text-white">Notifications</span>
-                    <span className="text-xs text-primary-600 dark:text-primary-400 cursor-pointer hover:underline">Mark all read</span>
+                    <span className="font-semibold text-sm text-slate-900 dark:text-white">Recent Events</span>
+                    <Link to="/admin/events" onClick={() => setNotifOpen(false)} className="text-xs text-primary-600 dark:text-primary-400 hover:underline">View All</Link>
                   </div>
-                  {NOTIFICATIONS.map((n) => (
-                    <div
-                      key={n.id}
-                      className={`px-4 py-3 flex gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer border-b border-slate-100 dark:border-slate-800 last:border-0 ${n.unread ? "bg-primary-50/50 dark:bg-primary-900/20" : ""}`}
-                    >
-                      <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.unread ? "bg-primary-500" : "bg-slate-300 dark:bg-slate-600"}`} />
-                      <div>
-                        <p className="text-sm text-slate-700 dark:text-slate-300">{n.text}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">{n.time}</p>
+                  {latestEvents.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-slate-400">No recent events.</div>
+                  ) : (
+                    latestEvents.map((ev) => (
+                      <div
+                        key={ev._id}
+                        className="px-4 py-3 flex gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer border-b border-slate-100 dark:border-slate-800 last:border-0"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center shrink-0">
+                           <img src={ev.image} alt="" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{ev.title}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">{timeSince(ev.createdAt)}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
           {/* Profile dropdown */}
-          <div ref={dropRef} className="relative">
+         <div ref={dropRef} className="relative">
             <button
               onClick={() => setDropOpen((v) => !v)}
               className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"

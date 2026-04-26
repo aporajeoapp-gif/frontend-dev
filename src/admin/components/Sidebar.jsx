@@ -22,21 +22,21 @@ import logo from "../../../public/logo.png";
 import { useAuth } from "../../context/AuthContext";
 import { confirmLogout,successAlert } from "../../utils/alert";
 const NAV_ITEMS = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true, memberHidden: true },
   { to: "/admin/users", label: "Users", icon: Users, adminOnly: true },
-  { to: "/admin/bus", label: "Bus Routes", icon: Bus },
-  { to: "/admin/ferry", label: "Ferry Routes", icon: Ship },
-  { to: "/admin/doctors", label: "Doctors", icon: Stethoscope },
-  { to: "/admin/emergency", label: "Emergency", icon: AlertTriangle },
+  { to: "/admin/bus", label: "Bus Routes", icon: Bus, memberHidden: true },
+  { to: "/admin/ferry", label: "Ferry Routes", icon: Ship, memberHidden: true },
+  { to: "/admin/doctors", label: "Doctors", icon: Stethoscope, memberHidden: true },
+  { to: "/admin/emergency", label: "Emergency", icon: AlertTriangle, memberHidden: true },
   { to: "/admin/events", label: "Events", icon: CalendarDays },
-  { to: "/admin/blood-donation", label: "Blood Donation", icon: Droplets },
-  { to: "/admin/advertisements", label: "Advertisements", icon: Megaphone },
+  { to: "/admin/blood-donation", label: "Blood Donation", icon: Droplets, memberHidden: true },
+  { to: "/admin/advertisements", label: "Advertisements", icon: Megaphone, memberHidden: true },
   {
     label: "Analytics",
     icon: BarChart3,
     children: [
       { to: "/admin/analytics", label: "Overview" },
-      { to: "/admin/analytics/auditlogs", label: "Audit Logs" },
+      { to: "/admin/analytics/auditlogs", label: "Audit Logs", memberHidden: true },
     ],
   },
   {
@@ -135,7 +135,7 @@ const handleLogout = async () => {
                 transition={{ duration: 0.18 }}
                 className="overflow-hidden ml-4 mt-0.5 space-y-0.5 border-l-2 border-slate-200 dark:border-slate-700 pl-3"
               >
-                {children.map((child) => (
+                {children.filter(c => !(c.memberHidden && user?.role === "member")).map((child) => (
                   <NavLink
                     key={child.to}
                     to={child.to}

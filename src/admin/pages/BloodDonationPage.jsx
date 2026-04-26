@@ -83,6 +83,18 @@ const empty = {
   targetUnits: "",
   collectedUnits: "0",
   banner: null,
+  organizationLogo: null,
+};
+
+const formatDateForInput = (d) => {
+  if (!d) return "";
+  try {
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return "";
+    return date.toISOString().split("T")[0];
+  } catch {
+    return "";
+  }
 };
 
 const STATUS_STYLE = {
@@ -95,8 +107,21 @@ const STATUS_STYLE = {
 };
 
 function BloodGroupToggle({ selected, onChange }) {
+  const isAll = selected.length === BLOOD_GROUPS.length;
+
   return (
     <div className="flex flex-wrap gap-2">
+      <button
+        type="button"
+        onClick={() => onChange(isAll ? [] : [...BLOOD_GROUPS])}
+        className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-colors ${
+          isAll
+            ? "bg-primary-600 border-primary-600 text-white"
+            : "border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-primary-400"
+        }`}
+      >
+        All
+      </button>
       {BLOOD_GROUPS.map((g) => (
         <button
           key={g}
@@ -108,10 +133,11 @@ function BloodGroupToggle({ selected, onChange }) {
                 : [...selected, g],
             )
           }
-          className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-colors ${selected.includes(g)
-                ? "bg-rose-600 border-rose-600 text-white"
-                : "border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-rose-400"
-            }`}
+          className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-colors ${
+            selected.includes(g)
+              ? "bg-rose-600 border-rose-600 text-white"
+              : "border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-rose-400"
+          }`}
         >
           {g}
         </button>
@@ -133,23 +159,41 @@ function CampForm({ value, onChange }) {
 
   return (
     <div className="space-y-4">
-      <Field label="Banner Image">
-        <label className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors overflow-hidden">
-          {preview ? (
-            <img
-              src={preview}
-              alt="Preview"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          ) : (
-            <div className="flex flex-col items-center">
-              <Upload size={24} className="text-slate-400 mb-2" />
-              <span className="text-xs text-slate-500">Click to upload banner</span>
-            </div>
-          )}
-          <input type="file" className="hidden" onChange={handleFile} accept="image/*" />
-        </label>
-      </Field>
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Banner Image">
+          <label className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors overflow-hidden">
+            {preview ? (
+              <img
+                src={preview}
+                alt="Preview"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <div className="flex flex-col items-center">
+                <Upload size={24} className="text-slate-400 mb-2" />
+                <span className="text-xs text-slate-500">Banner</span>
+              </div>
+            )}
+            <input type="file" className="hidden" onChange={handleFile} accept="image/*" />
+          </label>
+        </Field>
+
+        <Field label="Organization Logo">
+          <label className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors overflow-hidden">
+            {value.organizationLogo && typeof value.organizationLogo !== 'string' ? (
+              <img src={URL.createObjectURL(value.organizationLogo)} alt="Logo" className="absolute inset-0 w-full h-full object-contain p-2" />
+            ) : value.organizationLogo && typeof value.organizationLogo === 'string' ? (
+              <img src={value.organizationLogo} alt="Logo" className="absolute inset-0 w-full h-full object-contain p-2" />
+            ) : (
+              <div className="flex flex-col items-center">
+                <Upload size={24} className="text-slate-400 mb-2" />
+                <span className="text-xs text-slate-500">Logo</span>
+              </div>
+            )}
+            <input type="file" className="hidden" onChange={(e) => onChange({ ...value, organizationLogo: e.target.files[0] })} accept="image/*" />
+          </label>
+        </Field>
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
         <Field label="Camp Name">
@@ -259,19 +303,27 @@ function CampForm({ value, onChange }) {
             placeholder="0"
           />
         </Field>
-        <Field label="Status">
-          <select
-            value={value.status}
-            onChange={(e) => onChange({ ...value, status: e.target.value })}
-            className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {s.charAt(0).toUpperCase() + s.slice(1)}
-              </option>
-            ))}
-          </select>
-        </Field>
+        {value.status !== 'completed' ? (
+          <Field label="Status">
+            <select
+              value={value.status}
+              onChange={(e) => onChange({ ...value, status: e.target.value })}
+              className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                </option>
+              ))}
+            </select>
+          </Field>
+        ) : (
+          <Field label="Status">
+             <div className="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 font-bold">
+                Completed
+             </div>
+          </Field>
+        )}
       </div>
       <Field label="Blood Groups Needed">
         <BloodGroupToggle
@@ -316,7 +368,11 @@ export default function BloodDonationPage() {
     setModal("add");
   };
   const openEdit = (c) => {
-    setForm({ ...c, banner: null });
+    setForm({ 
+      ...c, 
+      banner: null,
+      date: formatDateForInput(c.date)
+    });
     setModal("edit");
   };
 

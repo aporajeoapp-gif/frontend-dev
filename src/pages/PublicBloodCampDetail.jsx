@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -11,12 +11,15 @@ import {
   Users,
   Target,
   ArrowLeft,
+  ChevronLeft,
   ChevronRight,
   UserPlus,
   ShieldCheck,
   Heart,
   Image as ImageIcon,
   X,
+  Search,
+  CheckCircle,
 } from "lucide-react";
 import { useBloodCamp } from "../hooks/bloodCampHook";
 import { successAlert, errorAlert } from "../utils/alert";
@@ -46,8 +49,11 @@ export default function PublicBloodCampDetail() {
   const [camp, setCamp] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [donorSearch, setDonorSearch] = useState("");
+  const [donorPage, setDonorPage] = useState(1);
   const [formData, setFormData] = useState({
     name: "",
+    fatherName: "",
     bloodGroup: "",
     age: "",
     phone: "",
@@ -70,7 +76,7 @@ export default function PublicBloodCampDetail() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.bloodGroup || !formData.phone || !formData.age) {
+    if (!formData.name || !formData.fatherName || !formData.bloodGroup || !formData.phone || !formData.age) {
        errorAlert("Please fill all required fields");
        return;
     }
@@ -81,7 +87,7 @@ export default function PublicBloodCampDetail() {
       if (res.success) {
         successAlert(res.message || "Registration Successful! Waiting for admin approval.");
         setShowForm(false);
-        setFormData({ name: "", bloodGroup: "", age: "", phone: "", donatedAt: "" });
+        setFormData({ name: "", fatherName: "", bloodGroup: "", age: "", phone: "", donatedAt: "" });
         loadData();
       } else {
         errorAlert(res.message);
@@ -90,6 +96,24 @@ export default function PublicBloodCampDetail() {
       setSubmitting(false);
     }
   };
+
+  // Donor Search & Pagination Logic
+  const filteredDonors = useMemo(() => {
+    if (!camp?.donors) return [];
+    const q = donorSearch.toLowerCase();
+    return camp.donors.filter(d => 
+      d.name.toLowerCase().includes(q) || 
+      d.bloodGroup.toLowerCase().includes(q)
+    );
+  }, [camp?.donors, donorSearch]);
+
+  const itemsPerPage = window.innerWidth >= 768 ? 6 : 5;
+  const totalPages = Math.ceil(filteredDonors.length / itemsPerPage);
+  const paginatedDonors = filteredDonors.slice((donorPage - 1) * itemsPerPage, donorPage * itemsPerPage);
+
+  useEffect(() => {
+    setDonorPage(1);
+  }, [donorSearch]);
 
   if (!camp && loading) {
     return (
@@ -173,32 +197,34 @@ export default function PublicBloodCampDetail() {
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                   <h2 className="text-2xl font-black text-slate-800 dark:text-white">Demand & Impact</h2>
-                   <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                      <div className="flex justify-between items-end mb-3">
-                         <div>
-                            <p className="text-3xl font-black text-rose-600 dark:text-rose-400">{camp.collectedUnits}</p>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Units Collected</p>
-                         </div>
-                         <div className="text-right">
-                            <p className="text-xl font-bold text-slate-400 dark:text-slate-600">/ {camp.targetUnits}</p>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Goal</p>
-                         </div>
-                      </div>
-                      <div className="h-3 bg-white dark:bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
-                        <motion.div 
-                          initial={{ width: 0 }}
-                          animate={{ width: `${progress}%` }}
-                          transition={{ duration: 1, ease: "easeOut" }}
-                          className="h-full bg-linear-to-r from-rose-500 via-pink-500 to-rose-400 rounded-full"
-                        />
-                      </div>
-                      <p className="mt-4 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                        Help us reach our goal! Each donation can save up to 3 lives.
-                      </p>
-                   </div>
-                </div>
+                {camp.isPublished && (
+                  <div className="space-y-6">
+                     <h2 className="text-2xl font-black text-slate-800 dark:text-white">Demand & Impact</h2>
+                     <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                        <div className="flex justify-between items-end mb-3">
+                           <div>
+                              <p className="text-3xl font-black text-rose-600 dark:text-rose-400">{camp.collectedUnits}</p>
+                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Units Collected</p>
+                           </div>
+                           <div className="text-right">
+                              <p className="text-xl font-bold text-slate-400 dark:text-slate-600">/ {camp.targetUnits}</p>
+                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Goal</p>
+                           </div>
+                        </div>
+                        <div className="h-3 bg-white dark:bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progress}%` }}
+                            transition={{ duration: 1, ease: "easeOut" }}
+                            className="h-full bg-linear-to-r from-rose-500 via-pink-500 to-rose-400 rounded-full"
+                          />
+                        </div>
+                        <p className="mt-4 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                          Help us reach our goal! Each donation can save up to 3 lives.
+                        </p>
+                     </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -210,7 +236,7 @@ export default function PublicBloodCampDetail() {
 
               <div className="mt-10 p-6 rounded-2xl bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/30 flex items-center gap-6">
                   <div className="w-16 h-16 rounded-2xl bg-rose-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-rose-500/20">
-                     <Heart size={32} className="fill-white" />
+                     <Droplets  size={32}  />
                   </div>
                   <div>
                     <h4 className="font-bold text-slate-800 dark:text-white">Emergency Blood Needed</h4>
@@ -226,57 +252,129 @@ export default function PublicBloodCampDetail() {
               </div>
             </motion.div>
 
-            {/* Donors Preview */}
-             <motion.div 
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               transition={{ delay: 0.2 }}
-               className="bg-slate-50 dark:bg-slate-900/50 rounded-3xl p-8 border border-slate-200 dark:border-slate-800"
-             >
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-3">
+            {/* Registered Donors Section */}
+            {camp.isPublished && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="bg-slate-50 dark:bg-slate-900/50 rounded-3xl p-8 border border-slate-200 dark:border-slate-800"
+              >
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                  <div className="flex items-center gap-3">
                     <Users className="text-rose-500" size={24} />
-                    Registered Donors
-                  </h3>
-                  <div className="px-4 py-1 bg-white dark:bg-slate-800 rounded-full text-xs font-bold shadow-sm border border-slate-200 dark:border-slate-700">
-                    {camp.donors?.length || 0} People
+                    <h3 className="text-xl font-black text-slate-800 dark:text-white">
+                      Donors ({filteredDonors.length})
+                    </h3>
+                  </div>
+                  
+                  {/* Search Bar */}
+                  <div className="relative w-full sm:w-64">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input 
+                      type="text"
+                      placeholder="Search donor..."
+                      value={donorSearch}
+                      onChange={(e) => setDonorSearch(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/50 transition-all"
+                    />
                   </div>
                 </div>
 
-                {camp.donors?.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {camp.donors.slice(0, 6).map((d, i) => (
-                      <div key={i} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-xs">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 font-black text-xs">
-                          {d.name.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{d.name}</p>
-                          <span className="text-[10px] text-rose-500 font-black">{d.bloodGroup}</span>
-                        </div>
-                      </div>
-                    ))}
-                    {camp.donors.length > 6 && (
-                      <div className="flex items-center justify-center p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
-                        <span className="text-[10px] font-bold text-slate-500">+ {camp.donors.length - 6} more</span>
+                {paginatedDonors.length > 0 ? (
+                  <>
+                    {/* Desktop View: Cards (6 items) */}
+                    <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-4">
+                      {paginatedDonors.map((d, i) => (
+                        <motion.div 
+                          key={i}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm"
+                        >
+                          <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center shrink-0">
+                            <img src="/logo-apo-sq.png" alt="" className="w-8 h-8 object-contain" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">{d.name}</p>
+                            <span className="text-[10px] text-rose-500 font-black">{d.bloodGroup}</span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Mobile View: Table (5 items) */}
+                    <div className="md:hidden overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-700">
+                            <th className="px-4 py-3 font-bold text-slate-500">Donor Name</th>
+                            <th className="px-4 py-3 font-bold text-slate-500 text-right">Group</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                          {paginatedDonors.map((d, i) => (
+                            <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                              <td className="px-4 py-3 font-medium text-slate-700 dark:text-slate-300">{d.name}</td>
+                              <td className="px-4 py-3 text-right">
+                                <span className="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 font-bold">
+                                  {d.bloodGroup}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="mt-8 flex items-center justify-center gap-2">
+                        <button 
+                          onClick={() => setDonorPage(p => Math.max(1, p - 1))}
+                          disabled={donorPage === 1}
+                          className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+                        >
+                          <ChevronLeft size={16} />
+                        </button>
+                        <span className="text-xs font-bold text-slate-500">
+                          Page {donorPage} of {totalPages}
+                        </span>
+                        <button 
+                          onClick={() => setDonorPage(p => Math.min(totalPages, p + 1))}
+                          disabled={donorPage === totalPages}
+                          className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+                        >
+                          <ChevronRight size={16} />
+                        </button>
                       </div>
                     )}
-                  </div>
+                  </>
                 ) : (
-                  <div className="text-center py-10">
-                     <p className="text-sm text-slate-400 italic">Be the first hero to register for this camp!</p>
+                  <div className="text-center py-10 bg-white dark:bg-slate-800 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+                    <p className="text-sm text-slate-400 italic">No donors found matches your search.</p>
                   </div>
                 )}
-             </motion.div>
+              </motion.div>
+            )}
           </div>
 
-          {/* Registration Sidebar */}
           <div className="lg:col-span-4">
             <div className="sticky top-24 space-y-6">
+              {!camp.isPublished && (
+                <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 rounded-3xl p-6 mb-4">
+                  <h3 className="text-sm font-black text-amber-700 dark:text-amber-500 mb-1">Private Preview</h3>
+                  <p className="text-[10px] text-amber-600 dark:text-amber-400">
+                    This camp is in draft mode. Units collected and donor list are hidden from public.
+                  </p>
+                </div>
+              )}
+              
               <motion.div 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-rose-600 rounded-3xl p-8 text-white shadow-2xl shadow-rose-900/40 relative overflow-hidden"
+                className={`${camp.status === 'completed' ? 'bg-slate-600' : 'bg-rose-600'} rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden`}
               >
                 <Droplets className="absolute -top-10 -right-10 w-40 h-40 opacity-10 rotate-12" />
                 
@@ -284,25 +382,32 @@ export default function PublicBloodCampDetail() {
                   <UserPlus size={24} />
                   Register Now
                 </h3>
-                <p className="text-rose-100 text-sm mb-8 leading-relaxed">
-                  Join the lifeline of our community. Your presence and participation are highly valued.
+                <p className="text-rose-100/80 text-sm mb-8 leading-relaxed">
+                  {camp.status === 'completed' 
+                    ? "This blood donation camp has concluded. Thank you to all who participated."
+                    : "Join the lifeline of our community. Your presence and participation are highly valued."}
                 </p>
 
                 <button 
                   onClick={() => setShowForm(true)}
-                  className="w-full py-4 bg-white text-rose-600 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl hover:scale-[1.02] transition-transform active:scale-[0.98]"
+                  disabled={camp.status === 'completed'}
+                  className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl transition-all ${
+                    camp.status === 'completed'
+                      ? 'bg-slate-500 text-slate-300 cursor-not-allowed opacity-60'
+                      : 'bg-white text-rose-600 hover:scale-[1.02] active:scale-[0.98]'
+                  }`}
                 >
-                  Confirm Participation
+                  {camp.status === 'completed' ? 'Registration Closed' : 'Self Registration'}
                 </button>
 
-                <div className="mt-8 pt-8 border-t border-rose-500/30 space-y-4">
+                <div className="mt-8 pt-8 border-t border-white/10 space-y-4">
                    <div className="flex items-start gap-3">
-                      <ShieldCheck className="text-rose-200 shrink-0" size={18} />
-                      <p className="text-[10px] text-rose-100 uppercase tracking-wider font-bold">100% Safe Process</p>
+                      <ShieldCheck className="text-white/60 shrink-0" size={18} />
+                      <p className="text-[10px] text-white/80 uppercase tracking-wider font-bold">100% Safe Process</p>
                    </div>
                    <div className="flex items-start gap-3">
-                      <Phone className="text-rose-200 shrink-0" size={18} />
-                      <p className="text-[10px] text-rose-100 uppercase tracking-wider font-bold">{camp.contactPhone}</p>
+                      <Phone className="text-white/60 shrink-0" size={18} />
+                      <p className="text-[10px] text-white/80 uppercase tracking-wider font-bold">{camp.contactPhone}</p>
                    </div>
                 </div>
               </motion.div>
@@ -310,8 +415,8 @@ export default function PublicBloodCampDetail() {
               <div className="bg-slate-900 rounded-3xl p-8 border border-slate-800">
                  <h4 className="text-lg font-black text-white mb-4">Organizer</h4>
                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-white">
-                       <ImageIcon size={20} />
+                    <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-white overflow-hidden">
+                       <img src={camp.organizationLogo || "/logo-apo-sq.png"} alt="" className="w-full h-full object-cover" />
                     </div>
                     <div>
                        <p className="font-bold text-white text-sm">{camp.organizer}</p>
@@ -369,6 +474,18 @@ export default function PublicBloodCampDetail() {
                            onChange={e => setFormData({...formData, name: e.target.value})}
                            className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-rose-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-sm font-bold text-slate-800 dark:text-white"
                            placeholder="Enter your name"
+                         />
+                      </div>
+
+                      <div className="space-y-1.5 focus-within:text-rose-500">
+                         <label className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 text-slate-400">Father's Name</label>
+                         <input 
+                           type="text"
+                           required
+                           value={formData.fatherName}
+                           onChange={e => setFormData({...formData, fatherName: e.target.value})}
+                           className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-rose-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-sm font-bold text-slate-800 dark:text-white"
+                           placeholder="Enter Father's name"
                          />
                       </div>
                       

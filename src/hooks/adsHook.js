@@ -6,10 +6,10 @@ export const useAds = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchAds = useCallback(async () => {
+  const fetchAds = useCallback(async (status) => {
     setLoading(true);
     try {
-      const response = await adsApi.getAllAds();
+      const response = await adsApi.getAllAds(status);
       setAds(response.data);
       setError(null);
     } catch (err) {

@@ -1,4 +1,4 @@
-﻿import { motion } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function PageBanner({
   title,
@@ -9,7 +9,7 @@ export default function PageBanner({
   badge,
 }) {
   return (
-<div className="relative w-[80%] h-56 sm:h-72 overflow-hidden mx-auto mt-5 rounded-2xl">
+<div className="relative w-[80%] h-32 sm:h-72 overflow-hidden mx-auto mt-5 rounded-2xl">
       {/* Background image */}
       {image && (
         <img
@@ -43,9 +43,10 @@ export default function PageBanner({
             initial={{ scale: 0.7, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.4, type: "spring" }}
-            className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center mb-4 shadow-xl"
+            className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center mb-2 sm:mb-4 shadow-xl"
           >
-            <Icon size={28} className="text-white" />
+            <Icon size={20} className="text-white sm:hidden" />
+            <Icon size={28} className="text-white hidden sm:block" />
           </motion.div>
         )}
 
@@ -54,7 +55,7 @@ export default function PageBanner({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-white/90 mb-3"
+            className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-white/90 mb-1.5 sm:mb-3"
           >
             {badge}
           </motion.span>
@@ -64,7 +65,7 @@ export default function PageBanner({
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="text-3xl sm:text-4xl font-extrabold text-white drop-shadow-lg tracking-tight"
+          className="text-xl sm:text-4xl font-extrabold text-white drop-shadow-lg tracking-tight"
         >
           {title}
         </motion.h1>
@@ -74,7 +75,7 @@ export default function PageBanner({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.22 }}
-            className="mt-2 text-sm sm:text-base text-white/75 max-w-md"
+            className="mt-1 sm:mt-2 text-[10px] sm:text-base text-white/75 max-w-md line-clamp-1 sm:line-clamp-none"
           >
             {subtitle}
           </motion.p>

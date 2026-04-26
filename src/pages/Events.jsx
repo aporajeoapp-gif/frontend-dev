@@ -140,7 +140,14 @@ export default function Events() {
                     <div className="space-y-1.5 text-sm text-slate-500 dark:text-slate-400 mb-3">
                       <div className="flex items-center gap-2">
                         <CalendarDays size={12} className={color} />
-                        <span>{event.date}</span>
+                        {/* <span>{event.date}</span> */}
+                        <span>
+  {new Date(event.date).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  })}
+</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock size={12} className={color} />
