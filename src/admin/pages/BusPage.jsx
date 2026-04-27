@@ -2,20 +2,17 @@ import RoutePageTemplate from "./shared/RoutePageTemplate";
 import useBuses from "../../hooks/bushook";
 import { createBus, deleteBus, updateBus } from "../../api/busApi";
 import fetchUser from "../../hooks/userhook";
+import { hasPermission } from "../../utils/rbac";
 
 export default function BusPage() {
   const { profile } = fetchUser();
   const { buses, loading, refresh } = useBuses();
 
   // ── Permission helpers ──────────────────────────────────────────────────────
-  const isAdmin = profile?.role === "admin";
-  const perms = Array.isArray(profile?.permissions) ? profile.permissions : [];
-  const hasPerm = (key) => isAdmin || perms.includes(key);
-
-  const canCreate = hasPerm("bus.create");
-  const canUpdate = hasPerm("bus.update");
-  const canDelete = hasPerm("bus.delete");
-  const canRead = hasPerm("bus.read");
+  const canCreate = hasPermission(profile, "bus.create");
+  const canUpdate = hasPermission(profile, "bus.update");
+  const canDelete = hasPermission(profile, "bus.delete");
+  const canRead = hasPermission(profile, "bus.read");
   // ───────────────────────────────────────────────────────────────────────────
     if (!canRead) {
     return (

@@ -40,7 +40,7 @@ const btn = (v = "primary") =>
       "inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors",
   })[v];
 
-const ROLES = ["admin", "coordinator", "member"];
+const ROLES = ["super_admin", "admin", "coordinator", "member"];
 const STATUSES = ["active", "deactive"];
 const RESOURCES = [
   { key: "bus", label: "Bus Routes", group: "Transport" },
@@ -69,6 +69,10 @@ const emptyUser = {
 };
 
 const ROLE_CONFIG = {
+  super_admin: {
+    icon: ShieldCheck,
+    cls: "bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800",
+  },
   admin: {
     icon: ShieldCheck,
     cls: "bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800",
@@ -155,7 +159,9 @@ function PasswordCell({ value }) {
   );
 }
 
-function PermissionMatrix({ permissions, onChange }) {
+function PermissionMatrix({ permissions, onChange, disabled, requesterPermissions = [] }) {
+  const isSuper = requesterPermissions.includes("*") || requesterPermissions.includes("admin_power");
+  const canGrant = (r, a) => isSuper || requesterPermissions.includes(pKey(r, a));
   const has = (r, a) => permissions.includes(pKey(r, a));
 
   const toggle = (r, a) => {
@@ -233,9 +239,10 @@ function PermissionMatrix({ permissions, onChange }) {
                       >
                         <input
                           type="checkbox"
+                          disabled={disabled || !canGrant(res.key, a)}
                           checked={has(res.key, a)}
                           onChange={() => toggle(res.key, a)}
-                          className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 accent-primary-600 cursor-pointer"
+                          className={`w-4 h-4 rounded border-slate-300 dark:border-slate-600 accent-primary-600 ${disabled || !canGrant(res.key, a) ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                         />
                       </div>
                     ))}
@@ -262,7 +269,13 @@ export default function UsersPage() {
   const [form, setForm] = useState(emptyUser);
   const [showPw, setShowPw] = useState(false);
 
+  const isSuperAdmin = user?.role === "super_admin";
   const isAdmin = user?.role === "admin";
+  const isCoordinator = user?.role === "coordinator";
+  const isAuthorized = isSuperAdmin || isAdmin || isCoordinator;
+
+  // Permissions should be disabled if an admin is editing themselves OR if a coordinator is editing anyone
+  const permissionsDisabled = isCoordinator || (isAdmin && modal?.mode === "edit" && modal?.id === user?._id);
 
   const openAdd = () => {
     setForm({ ...emptyUser });
@@ -363,7 +376,7 @@ export default function UsersPage() {
       ),
     },
     { key: "role", label: "Role", render: (v) => <RoleBadge value={v} /> },
-    ...(isAdmin
+    ...(isAdmin || isSuperAdmin
       ? [
           {
             key: "password",
@@ -445,7 +458,7 @@ export default function UsersPage() {
             {users.length} total users
           </p>
         </div>
-        {isAdmin && (
+        {isAuthorized && (
           <button className={btn("primary")} onClick={openAdd}>
             <Plus size={15} /> Add User
           </button>
@@ -459,23 +472,28 @@ export default function UsersPage() {
           data={users}
           searchKeys={["name", "email", "role"]}
           actions={
-            isAdmin
-              ? (row) => (
-                  <>
-                    <button
-                      className={btn("ghost")}
-                      onClick={() => openEdit(row)}
-                    >
-                      <Pencil size={14} />
-                    </button>
-                    <button
-                      className={btn("ghost")}
-                      onClick={() => handleDelete(row)}
-                    >
-                      <Trash2 size={14} className="text-red-500" />
-                    </button>
-                  </>
-                )
+            isAuthorized
+              ? (row) => {
+                  // Cannot edit/delete super admin unless you are super admin
+                  if (row.role === "super_admin" && !isSuperAdmin) return null;
+                  
+                  return (
+                    <>
+                      <button
+                        className={btn("ghost")}
+                        onClick={() => openEdit(row)}
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        className={btn("ghost")}
+                        onClick={() => handleDelete(row)}
+                      >
+                        <Trash2 size={14} className="text-red-500" />
+                      </button>
+                    </>
+                  );
+                }
               : undefined
           }
         />
@@ -638,9 +656,7 @@ export default function UsersPage() {
                       const newRole = e.target.value;
                       let newPerms = form.permissions;
                       
-                      if (newRole === "admin") {
-                        newPerms = RESOURCES.flatMap((r) => ACTIONS.map((a) => pKey(r.key, a)));
-                      } else if (newRole === "member") {
+                      if (newRole === "member") {
                         newPerms = [];
                       }
                       
@@ -651,9 +667,13 @@ export default function UsersPage() {
                       });
                     }}
                   >
-                    {ROLES.map((r) => (
+                    {ROLES.filter(r => {
+                      if (isSuperAdmin) return true;
+                      if (isAdmin) return r !== "super_admin";
+                      return false;
+                    }).map((r) => (
                       <option key={r} value={r}>
-                        {r.charAt(0).toUpperCase() + r.slice(1)}
+                        {r.charAt(0).toUpperCase() + r.slice(1).replace("_", " ")}
                       </option>
                     ))}
                   </select>
@@ -681,6 +701,8 @@ export default function UsersPage() {
                 <PermissionMatrix
                   permissions={form.permissions ?? []}
                   onChange={(perms) => setForm({ ...form, permissions: perms })}
+                  disabled={permissionsDisabled}
+                  requesterPermissions={isSuperAdmin ? ["*"] : isAdmin ? ["admin_power", ...(user?.permissions ?? [])] : (user?.permissions ?? [])}
                 />
               )}
               <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">

@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useEvents } from "../../hooks/eventHook";
 import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
 import fetchUser from "../../hooks/userhook";
+import { hasPermission } from "../../utils/rbac";
 
 const inp =
   "w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-primary-400 dark:focus:border-primary-500 text-slate-800 dark:text-slate-200 placeholder-slate-400 transition-colors";
@@ -173,14 +174,10 @@ const { profile } = fetchUser();
       errorAlert(res.message);
     }
   };
-  const isAdmin = profile?.role === "admin";
-  const isMember = profile?.role === "member";
-  const perms = Array.isArray(profile?.permissions) ? profile.permissions : [];
-  const hasPerm = (key) => isAdmin || perms.includes(key);
-  const canCreate = !isMember && hasPerm("events.create");
-  const canRead   = hasPerm("events.read");
-  const canUpdate = !isMember && hasPerm("events.update");
-  const canDelete = !isMember && hasPerm("events.delete");
+  const canCreate = hasPermission(profile, "events.create");
+  const canRead   = hasPermission(profile, "events.read");
+  const canUpdate = hasPermission(profile, "events.update");
+  const canDelete = hasPermission(profile, "events.delete");
 
   if (!canRead) {
     return (

@@ -2,20 +2,17 @@ import RoutePageTemplate from "./shared/RoutePageTemplate";
 import useFerries from "../../hooks/ferryhook";
 import { createFerry, deleteFerry, updateFerry } from "../../api/ferryApi";
 import fetchUser from "../../hooks/userhook";
+import { hasPermission } from "../../utils/rbac";
 
 export default function FerryPage() {
   const { profile } = fetchUser();
   const { ferries, loading, refresh } = useFerries();
 
   // ── Permission helpers ──────────────────────────────────────────────────────
-  const isAdmin = profile?.role === "admin";
-  const perms = Array.isArray(profile?.permissions) ? profile.permissions : [];
-  const hasPerm = (key) => isAdmin || perms.includes(key);
-
-  const canCreate = hasPerm("ferry.create");
-  const canUpdate = hasPerm("ferry.update");
-  const canDelete = hasPerm("ferry.delete");
-  const canRead = hasPerm("ferry.read");
+  const canCreate = hasPermission(profile, "ferry.create");
+  const canUpdate = hasPermission(profile, "ferry.update");
+  const canDelete = hasPermission(profile, "ferry.delete");
+  const canRead = hasPermission(profile, "ferry.read");
   // ───────────────────────────────────────────────────────────────────────────
   if (!canRead) {
     return (

@@ -30,6 +30,7 @@ import AnalyticsPage from "./admin/pages/AnalyticsPage";
 import SettingsPage from "./admin/pages/SettingsPage";
 import BloodDonationPage from "./admin/pages/BloodDonationPage";
 import AdminBloodCampDetail from "./admin/pages/AdminBloodCampDetail";
+import DDocs from "./admin/pages/DDocs";
 import ProtectedRoute, {
   AdminRoute,
   NonMemberRoute,
@@ -87,9 +88,9 @@ function App() {
                   <Route
                     path="settings"
                     element={
-                      <NonMemberRoute>
+                      <AdminRoute>
                         <SettingsPage />
-                      </NonMemberRoute>
+                      </AdminRoute>
                     }
                   />
                   <Route
@@ -101,6 +102,14 @@ function App() {
                     element={<AdminBloodCampDetail />}
                   />
                 </Route>
+                <Route
+                  path="/admin/docs"
+                  element={
+                    <AdminRoute>
+                      <DDocs />
+                    </AdminRoute>
+                  }
+                />
               </Route>
 
               <Route path="/" element={<PublicLayout />}>

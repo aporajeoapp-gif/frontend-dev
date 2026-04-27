@@ -1,0 +1,140 @@
+{
+  "api_documentation": {
+    "version": "2.4.0",
+    "base_url": "/api/v1",
+    "auth_protocol": "Bearer JWT",
+    "groups": [
+      {
+        "name": "Authentication & Staff Onboarding",
+        "endpoints": [
+          { "method": "POST", "path": "/auth/login", "permission": "public", "logic": "Verifies credentials using Bcrypt, returns JWT + Profile payload.", "payload": "{ email, password }" },
+          { "method": "POST", "path": "/auth/signup", "permission": "admin.create", "logic": "Registers new staff (coordinator/admin). Validates requester role.", "payload": "{ name, email, password, role }" },
+          { "method": "POST", "path": "/auth/super-admin/signup", "permission": "ROOT_ONLY", "logic": "Bootstraps first super_admin if collection is empty. Requires secret_key.", "payload": "{ name, email, password, secret_key }" }
+        ]
+      },
+      {
+        "name": "Transport Management",
+        "endpoints": [
+          { "method": "POST", "path": "/bus/create-bus", "permission": "bus.create", "logic": "Adds new route. Validates stop array and fare types.", "payload": "{ busName, routeName, stops, timings, fare }" },
+          { "method": "GET", "path": "/bus/get-all-buses", "permission": "public", "logic": "Fetches all active routes from DB.", "params": "none" },
+          { "method": "PUT", "path": "/bus/update-bus/:id", "permission": "bus.update", "logic": "Updates route. Partial update supported.", "payload": "{ fare?, stops? }" },
+          { "method": "DELETE", "path": "/bus/delete-bus/:id", "permission": "bus.delete", "logic": "Removes route. Logs action in Audit Trail." }
+        ]
+      },
+      {
+        "name": "Healthcare & Blood Services",
+        "endpoints": [
+          { "method": "POST", "path": "/doctor/create", "permission": "doctors.create", "logic": "Multipart upload. Saves image to S3 folder /doctor_logos/.", "payload": "FormData { name, specialty, image }" },
+          { "method": "GET", "path": "/doctor/all", "permission": "public", "logic": "Lists verified professionals." },
+          { "method": "POST", "path": "/blood-donation/create", "permission": "blood_donation.create", "logic": "Schedules camp. Uploads banner to S3 folder /blood_camps/.", "payload": "FormData { campName, banner }" }
+        ]
+      },
+      {
+        "name": "Audit & Security",
+        "endpoints": [
+          { "method": "GET", "path": "/audit-log/all", "permission": "audit_logs.view", "logic": "Fetches chronological logs of all destructive actions." },
+          { "method": "GET", "path": "/analytics/stats", "permission": "analytics.view", "logic": "Aggregates platform-wide data points." }
+        ]
+      }
+    ]
+  },
+  "project_structure": {
+     "backend": {
+      "src/api/v1/controllers": "Business logic and transaction management.",
+      "src/api/v1/middleware": "rbac.middleware (Permission guards), auth.middleware (JWT).",
+      "src/api/v1/routes": "Endpoint mapping (auth.route, bus.route, etc.).",
+      "src/models": "Mongoose schemas: User.model, BusRoute.model, Event.model.",
+      "src/utils": "s3.utils (Cloud storage), alert.utils (Shared notifications)."
+     },
+     "frontend": {
+      "src/admin/pages": "Dashboard management views (UsersPage, BusPage, etc.).",
+      "src/context": "AuthContext (Session), LanguageContext (i18n).",
+      "src/api": "axiosClient.js (Interceptors), authApi.js, eventApi.js.",
+      "src/protectedroute": "Navigation guards for Auth/Admin/Coordinator access."
+     }
+  },
+  "rbac_hierarchy": {
+     "super_admin": "Global Bypass. Root access to system settings and all user permissions.",
+     "admin": "Delegated Authority. Can manage other Admins, Coordinators, and Members. Cannot edit self-permission.",
+     "coordinator": "Operational. Can manage resources (Bus, Events, etc.) but restricted from Users and Settings.",
+     "member": "Standard User. Read-only access to internal platform data."
+  },
+  "aws_s3_config": {
+     "region": "ap-south-1",
+     "folders": [
+      "advertisements (Ad banners)",
+      "events (Community event photos)",
+      "blood_camps (Camp banners and logos)",
+      "profileimage (User avatars)",
+      "doctor_logos (Professional headshots)"
+     ]
+  },
+  "ci_cd_devops": {
+     "framework": "Serverless Framework (v3)",
+     "provider": "AWS Lambda (Node.js 20.x runtime)",
+     "pipeline": "GitHub Actions (Continuous Integration & Cloud Formation Deployment)"
+  },
+  "db_schema": [
+     { 
+      "model": "User", 
+      "relations": "1:Many with AuditLogs, 1:1 with Auth Session", 
+      "critical_fields": "name: String (Required, 3-50 chars)\nemail: String (Unique, Lowercase, Validated)\npassword: String (Salted Hash)\nrole: Enum [super_admin, admin, coordinator, member]\npermissions: Array [String]\navatar: String (URL to S3 path 'profileimage/')\nisEmailVerified: Boolean\nstatus: Enum [active, deactive]\nphno: String (Optional)\naddress: String (Optional)\ndob: String (Optional)" 
+     },
+     { 
+        "model": "AuditLog", 
+        "relations": "Recursive association with User (subject of log)", 
+        "critical_fields": "user: ObjectId\nuserName: String\nuserEmail: String\nuserRole: String\naction: String (CRUD operation)\ntask: String (Logical context)\ndetails: String (Verbose description)\nseverity: Enum [low, medium, high]\npayload: { oldData: any, newData: any }\nentityId: ObjectId (Resource modified)\nipAddress: String\ndeviceName: String" 
+     },
+     { 
+      "model": "BusRoute", 
+      "relations": "Author Association with User model (createdBy)", 
+      "critical_fields": "busName: String (Optional)\nrouteName: Array [String]\nstops: Array [String]\ntimings: Array [{ departure: String, arrival: String }]\nfare: Number\ncreatedBy: String\ncreatorName: String" 
+     },
+     { 
+        "model": "FerryRoute", 
+        "relations": "Standalone Resource", 
+        "critical_fields": "ferryName: String\nrouteName: Array [String]\nstops: Array [String]\ntimings: Array [{ departure: String, arrival: String }]\nfare: Number\ncreatedBy: String\ncreatorName: String" 
+     },
+     { 
+      "model": "BloodCamp", 
+      "relations": "1:Many with Donor registrations", 
+      "critical_fields": "campName: String\norganizer: String\ndate: String\ntime: String\nlocation: String\nbloodGroupsNeeded: Array [String]\nbanner_image: String\norganizationLogo: String\ntargetUnits: Number\ncollectedUnits: Number\nstatus: Enum [upcoming, ongoing, completed]\ncreatedBy: ObjectId" 
+     },
+     { 
+        "model": "Donor", 
+        "relations": "Reference to BloodCamp (campId)", 
+        "critical_fields": "campId: ObjectId (Ref: BloodCamp)\nname: String\nfatherName: String\nbloodGroup: String\nage: Number\nphone: String\nstatus: Enum [pending, approved]\napprovedBy: ObjectId (Ref: User)\nexpiresAt: Date (TTL for pending list)" 
+     },
+     { 
+      "model": "Event", 
+      "relations": "Standalone Community Resource", 
+      "critical_fields": "title: String\ndescription: String\ndate: Date\ntime: String\nlocation: String\norganizer: String\nimage: String\nstatus: Enum [upcoming, ongoing, completed]\ncreatedBy: String" 
+     },
+     { 
+      "model": "Doctor", 
+      "relations": "Healthcare Directory", 
+      "critical_fields": "name: String\nspecialty: String\nphone: String\nimage: String\nschedule: Array [{ day: String, time: String, chamber: String }]\ncreatedBy: String\ncreatorName: String" 
+     },
+     { 
+        "model": "Advertisement", 
+        "relations": "Commercial Resources for Mobile App", 
+        "critical_fields": "title: String\ndescription: String\nimage: String\nlink: String (Optional)\ntag: String\ncta: String (Button text)\nstartDate: Date\nendDate: Date\nstatus: Enum [active, deactive]\ncreatedBy: String" 
+     },
+     { 
+        "model": "EmergencyService", 
+        "relations": "Static Hub Resources", 
+        "critical_fields": "serviceName: String\ncategory: Enum [Ambulance, Fire, Police, Hospital, Other]\naddress: String\ncontactPhone: Array [String]\ncreatedBy: String" 
+     }
+  ],
+  "quick_start": [
+     { "step": "1", "action": "Install Dependencies", "cmd": "npm install" },
+     { "step": "2", "action": "Initialize Environment", "cmd": "cp .env.example .env" },
+     { "step": "3", "action": "Run Dev Server", "cmd": "npm run dev" }
+  ],
+  "environment_variables": [
+     { "key": "MONGO_URI", "purpose": "Atlas connection string." },
+     { "key": "JWT_SECRET", "purpose": "Token signing key." },
+     { "key": "S3_BUCKET_NAME", "purpose": "Target AWS storage bucket." },
+     { "key": "SECRET_PASS_KEY", "purpose": "Root signup key." }
+  ]
+}

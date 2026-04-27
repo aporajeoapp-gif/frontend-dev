@@ -6,6 +6,7 @@ import { createDoctor, updateDoctor, deleteDoctor } from "../../api/doctorApi";
 import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
 import fetchUser from "../../hooks/userhook";
 import { toast } from "sonner";
+import { hasPermission } from "../../utils/rbac";
 
 // ── Shared styles ──────────────────────────────────────────────
 const inp =
@@ -171,13 +172,10 @@ export default function DoctorsPage() {
   }, [doctors]);
 
   // ── Permissions ──
-  const isAdmin = profile?.role === "admin";
-  const perms = Array.isArray(profile?.permissions) ? profile.permissions : [];
-  const hasPerm = (key) => isAdmin || perms.includes(key);
-  const canCreate = hasPerm("doctors.create");
-  const canRead   = hasPerm("doctors.read");
-  const canUpdate = hasPerm("doctors.update");
-  const canDelete = hasPerm("doctors.delete");
+  const canCreate = hasPermission(profile, "doctors.create");
+  const canRead   = hasPermission(profile, "doctors.read");
+  const canUpdate = hasPermission(profile, "doctors.update");
+  const canDelete = hasPermission(profile, "doctors.delete");
 
   if (!canRead) {
     return (

@@ -1,4 +1,4 @@
-﻿import { motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Users, Stethoscope, Bus, Ship, AlertTriangle,
   CheckCircle, Info, Clock, TrendingUp, Shield,
@@ -57,6 +57,7 @@ function SectionTitle({ children }) {
 
 function Avatar({ name, role }) {
   const roleColor = {
+    super_admin: "bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400",
     admin:       "bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-400",
     coordinator: "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400",
     member:      "bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400",
@@ -70,6 +71,7 @@ function Avatar({ name, role }) {
 
 function RoleBadge({ role }) {
   const map = {
+    super_admin: "bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400",
     admin:       "bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-400",
     coordinator: "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400",
     member:      "bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400",
@@ -150,7 +152,7 @@ export default function AdminDashboard() {
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {[
-          { label: "Total users",     value: users.total,       icon: Users,       color: "indigo", sub: `${roles.admin ?? 0} admin · ${roles.coordinator ?? 0} coord · ${roles.member ?? 0} member` },
+          { label: "Total users",     value: users.total,       icon: Users,       color: "indigo", sub: `${roles.super_admin ?? 0} super · ${roles.admin ?? 0} admin · ${roles.coordinator ?? 0} coord` },
           { label: "Doctors",         value: doctors.total,     icon: Stethoscope, color: "cyan",   sub: `Avg exp ${doctors.avgExperience} yrs` },
           { label: "Bus routes",      value: buses.total,       icon: Bus,         color: "violet", sub: `Avg fare ₹${buses.avgFare}` },
           { label: "Ferry routes",    value: ferries.total,     icon: Ship,        color: "rose",   sub: ferries.sampleName ?? "—" },

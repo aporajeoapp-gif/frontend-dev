@@ -8,15 +8,15 @@ export default function ProtectedRoute() {
   return <Outlet />;
 }
 
-// Guards routes that require role === "admin"
+// Guards routes that require role === "admin" or "super_admin"
 export function AdminRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
-  if (!user || user.role !== "admin") return <Navigate to="/admin" replace />;
+  if (!user || (user.role !== "admin" && user.role !== "super_admin")) return <Navigate to="/admin" replace />;
   return children;
 }
 
-// Guards routes hidden from "member" role (admin + coordinator allowed)
+// Guards routes hidden from "member" role (super_admin + admin + coordinator allowed)
 export function NonMemberRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;

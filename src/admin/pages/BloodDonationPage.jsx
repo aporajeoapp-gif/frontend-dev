@@ -16,6 +16,7 @@ import { motion } from "framer-motion";
 import { useBloodCamp } from "../../hooks/bloodCampHook";
 import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
 import fetchUser from "../../hooks/userhook";
+import { hasPermission } from "../../utils/rbac";
 
 const inp =
   "w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-primary-400 dark:focus:border-primary-500 text-slate-800 dark:text-slate-200 placeholder-slate-400 transition-colors";
@@ -404,13 +405,10 @@ export default function BloodDonationPage() {
     }
   };
 
-  const isAdmin = profile?.role === "admin";
-  const perms = Array.isArray(profile?.permissions) ? profile.permissions : [];
-  const hasPerm = (key) => isAdmin || perms.includes(key);
-  const canCreate = hasPerm("blood.create");
-  const canRead   = hasPerm("blood.read");
-  const canUpdate = hasPerm("blood.update");
-  const canDelete = hasPerm("blood.delete");
+  const canCreate = hasPermission(profile, "blood.create");
+  const canRead   = hasPermission(profile, "blood.read");
+  const canUpdate = hasPermission(profile, "blood.update");
+  const canDelete = hasPermission(profile, "blood.delete");
 
   if (!canRead) {
     return (

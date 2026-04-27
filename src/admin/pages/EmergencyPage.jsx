@@ -9,6 +9,7 @@ import {
 import useEmergencyServices from "../../hooks/emergencyHook";
 import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
 import fetchUser from "../../hooks/userhook";
+import { hasPermission } from "../../utils/rbac";
 
 const inp =
   "w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-primary-400 dark:focus:border-primary-500 text-slate-800 dark:text-slate-200 placeholder-slate-400 transition-colors";
@@ -53,13 +54,10 @@ export default function EmergencyPage() {
     if (emergencies) setLocalList(emergencies);
   }, [emergencies]);
 
-  const isAdmin = profile?.role === "admin";
-  const perms = Array.isArray(profile?.permissions) ? profile.permissions : [];
-  const hasPerm = (key) => isAdmin || perms.includes(key);
-  const canCreate = hasPerm("emergency.create");
-  const canRead = hasPerm("emergency.read");
-  const canUpdate = hasPerm("emergency.update");
-  const canDelete = hasPerm("emergency.delete");
+  const canCreate = hasPermission(profile, "emergency.create");
+  const canRead = hasPermission(profile, "emergency.read");
+  const canUpdate = hasPermission(profile, "emergency.update");
+  const canDelete = hasPermission(profile, "emergency.delete");
 
   const openAdd = () => {
     setForm(empty);

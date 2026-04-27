@@ -12,6 +12,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { updateProfile } from "../../api/authApi";
 import { toast } from "sonner";
 import eventApi from "../../api/eventApi";
+import { confirmLogout,successAlert } from "../../utils/alert";
 
 function initials(name = "") {
   const parts = name.trim().split(" ");
@@ -283,10 +284,18 @@ export default function AdminNavbar({ onMenuClick }) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
+  const handleLogout = async () => {
+  const result = await confirmLogout();
+
+  if (!result.isConfirmed) return;
+
+  logout(); // clear token + user
+
+  successAlert("Logged out successfully");
+
+  // optional redirect
+  window.location.href = "/";
+};
 
   return (
     <>

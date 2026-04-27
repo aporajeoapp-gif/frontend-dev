@@ -16,6 +16,7 @@ import {
   X,
   Droplets,
   LogOut,
+  BookOpen,
 } from "lucide-react";
 import { useState } from "react";
 import logo from "../../../public/logo.png";
@@ -43,8 +44,9 @@ const NAV_ITEMS = [
     to: "/admin/settings",
     label: "Settings",
     icon: Settings,
-    memberHidden: true,
+    adminOnly: true,
   },
+  { to: "/admin/docs", label: "DDocs", icon: BookOpen, adminOnly: true, target: "_blank" },
 ];
 
 export default function Sidebar({
@@ -54,7 +56,9 @@ export default function Sidebar({
   onMobileClose,
 }) {
   const { user, logout } = useAuth();
+  const isSuperAdmin = user?.role === "super_admin";
   const isAdmin = user?.role === "admin";
+  const isAuthorized = isSuperAdmin || isAdmin;
   const location = useLocation();
 const handleLogout = async () => {
   const result = await confirmLogout();
@@ -81,8 +85,9 @@ const handleLogout = async () => {
     adminOnly,
     memberHidden,
     children,
+    target,
   }) => {
-    if (adminOnly && !isAdmin) return null;
+    if (adminOnly && !isAuthorized) return null;
     if (memberHidden && user?.role === "member") return null;
 
     // ── Dropdown group ──
@@ -165,6 +170,7 @@ const handleLogout = async () => {
         key={to}
         to={to}
         end={end}
+        target={target}
         onClick={onMobileClose}
         className={({ isActive }) =>
           `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group outline-none focus:outline-none
