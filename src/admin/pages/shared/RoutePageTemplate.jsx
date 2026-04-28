@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, X, RefreshCw } from "lucide-react";
 import Table from "../../components/ui/Table";
 import { confirmDelete, errorAlert, successAlert } from "../../../utils/alert";
 import { toast } from "sonner";
@@ -146,21 +146,44 @@ export default function RoutePageTemplate({
     setForm(empty);
     setModal("add");
   };
+const formatTime = (timeStr) => {
+  if (!timeStr) return "";
 
+  
+  const [time, modifier] = timeStr.split(" ");
+  let [hours, minutes] = time.split(":");
+
+  if (modifier === "PM" && hours !== "12") {
+    hours = String(Number(hours) + 12);
+  }
+  if (modifier === "AM" && hours === "12") {
+    hours = "00";
+  }
+
+  return `${hours.padStart(2, "0")}:${minutes}`;
+};
   const openEdit = (r) => {
-    setForm({
-      ...r,
-      routeName: Array.isArray(r.routeName)
-        ? r.routeName
-        : [r.routeName || "", ""],
-      stops: Array.isArray(r.stops) ? r.stops.join(", ") : r.stops || "",
-      timings:
-        Array.isArray(r.timings) && r.timings.length > 0
-          ? r.timings
-          : [{ departure: "", arrival: "" }],
-    });
-    setModal("edit");
-  };
+  setForm({
+    ...r,
+    routeName: Array.isArray(r.routeName)
+      ? r.routeName
+      : [r.routeName || "", ""],
+
+    stops: Array.isArray(r.stops)
+      ? r.stops.join(", ")
+      : r.stops || "",
+
+    timings:
+      Array.isArray(r.timings) && r.timings.length > 0
+        ? r.timings.map((t) => ({
+            departure: formatTime(t.departure),
+            arrival: formatTime(t.arrival),
+          }))
+        : [{ departure: "", arrival: "" }],
+  });
+
+  setModal("edit");
+};
 
   const handleSave = async () => {
     if (!form.routeName[0] || !form.routeName[1]) {
@@ -256,11 +279,23 @@ export default function RoutePageTemplate({
             {routes.length} routes registered
           </p>
         </div>
-        {canCreate && (
-          <button className={btn()} onClick={openAdd}>
-            <Plus size={15} /> Add Route
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {fetchFn && (
+            <button
+              className={btn("secondary")}
+              onClick={fetchFn}
+              title={`Refresh ${title}s`}
+            >
+              <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+          )}
+          {canCreate && (
+            <button className={btn()} onClick={openAdd}>
+              <Plus size={15} /> Add Route
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 overflow-hidden">
