@@ -1154,7 +1154,6 @@ export default function AnalyticsPage() {
           color="sky"
         />
       </div>
-      <Outlet />
     </div>
   );
 }

@@ -7,7 +7,8 @@ import {
   History,
   CheckCircle2,
   AlertTriangle,
-  ArrowRightCircle
+  ArrowRightCircle,
+  LogsIcon
 } from "lucide-react";
 import { toast } from "sonner";
 import { getAllLogs } from "../../api/auditlogsApi";
@@ -52,7 +53,7 @@ function AuditLogs() {
   const navigate = useNavigate();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-
+console.log(logs)
   async function fetchlogs() {
     setLoading(true);
     try {
