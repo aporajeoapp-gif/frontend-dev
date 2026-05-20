@@ -16,6 +16,7 @@ import {
   Eye,
   EyeOff,
   Globe,
+  Search,
 } from "lucide-react";
 import { useBloodCamp } from "../../hooks/bloodCampHook";
 import { jsPDF } from "jspdf";
@@ -142,6 +143,8 @@ export default function AdminBloodCampDetail() {
   const { fetchCampById, addDonor, fetchDonors, removeDonor, confirmDonorApproval, updateCamp, loading } = useBloodCamp();
   const [camp, setCamp] = useState(null);
   const [donors, setDonors] = useState([]);
+  const [candidateSearch, setCandidateSearch] = useState("");
+  const [bloodGroupFilter, setBloodGroupFilter] = useState("all");
   const [modal, setModal] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [donorForm, setDonorForm] = useState({
@@ -247,7 +250,7 @@ export default function AdminBloodCampDetail() {
   };
 
   const handleExport = async () => {
-    if (!camp || donors.length === 0) return;
+    if (!camp || visibleDonors.length === 0) return;
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -316,7 +319,7 @@ export default function AdminBloodCampDetail() {
 
     doc.setFontSize(10);
     doc.setTextColor(225, 29, 72); // rose-600
-    doc.text(`${donors.length}`, 25, 60);
+    doc.text(`${visibleDonors.length}`, 25, 60);
     doc.text(`${camp.targetUnits}`, pageWidth / 2, 60, { align: "center" });
     doc.text(`${camp.collectedUnits} UNITS`, pageWidth - 25, 60, { align: "right" });
 
@@ -356,7 +359,7 @@ export default function AdminBloodCampDetail() {
     ]);
 
     const tableColumn = ["#", "DONOR NAME", "FATHER'S NAME", "BLOOD GROUP", "AGE", "PHONE", "STATUS"];
-    const tableRows = donors.map((d, i) => [
+    const tableRows = visibleDonors.map((d, i) => [
       i + 1,
       d.name.toUpperCase(),
       (d.fatherName || "—").toUpperCase(),
@@ -421,6 +424,14 @@ export default function AdminBloodCampDetail() {
   }
 
   if (!camp) return null;
+
+  const visibleDonors = donors
+    .filter((donor) =>
+      String(donor.name || "")
+        .toLowerCase()
+        .includes(candidateSearch.toLowerCase().trim()),
+    )
+    .filter((donor) => bloodGroupFilter === "all" || donor.bloodGroup === bloodGroupFilter);
 
   return (
     <div className="space-y-5">
@@ -518,7 +529,7 @@ export default function AdminBloodCampDetail() {
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <h2 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Users size={18} className="text-primary-500" />
-                Donors List ({donors.length})
+                Donors List ({visibleDonors.length})
               </h2>
               <button 
                 onClick={handleExport}
@@ -526,6 +537,29 @@ export default function AdminBloodCampDetail() {
               >
                 <Download size={14} /> Export PDF
               </button>
+            </div>
+            <div className="px-6 py-3 border-b border-slate-100 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  value={candidateSearch}
+                  onChange={(e) => setCandidateSearch(e.target.value)}
+                  placeholder="Search by candidate name..."
+                  className="w-full pl-8 pr-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg border border-transparent focus:border-primary-400 outline-none"
+                />
+              </div>
+              <select
+                value={bloodGroupFilter}
+                onChange={(e) => setBloodGroupFilter(e.target.value)}
+                className="px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg border border-transparent focus:border-primary-400 outline-none"
+              >
+                <option value="all">All Blood Groups</option>
+                {BLOOD_GROUPS.map((group) => (
+                  <option key={group} value={group}>
+                    {group}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -555,17 +589,17 @@ export default function AdminBloodCampDetail() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {donors.length === 0 ? (
+                  {visibleDonors.length === 0 ? (
                     <tr>
                       <td
                         colSpan="5"
                         className="px-6 py-12 text-center text-sm text-slate-500 dark:text-slate-400"
                       >
-                        No donors registered for this camp yet.
+                        No donors found.
                       </td>
                     </tr>
                   ) : (
-                    donors.map((donor) => (
+                    visibleDonors.map((donor) => (
                       <tr
                         key={donor._id}
                         className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"

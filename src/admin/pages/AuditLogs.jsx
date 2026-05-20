@@ -8,11 +8,14 @@ import {
   CheckCircle2,
   AlertTriangle,
   ArrowRightCircle,
-  LogsIcon
+  ChevronLeft,
+  ChevronRight,
+  Download
 } from "lucide-react";
 import { toast } from "sonner";
-import { getAllLogs } from "../../api/auditlogsApi";
+import { getAllLogs, getAuditActions, exportAuditLogsCsv } from "../../api/auditlogsApi";
 import Table from "../components/ui/Table";
+import { extractApiErrorMessage } from "../../utils/alert";
 
 const btn = (v = "primary") =>
   ({
@@ -53,24 +56,104 @@ function AuditLogs() {
   const navigate = useNavigate();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-console.log(logs)
-  async function fetchlogs() {
+  const [exporting, setExporting] = useState(false);
+  const [actions, setActions] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, limit: 10 });
+  const [filters, setFilters] = useState({
+    search: "",
+    action: "",
+    startDate: "",
+    endDate: "",
+    sortBy: "date",
+    sortOrder: "desc",
+  });
+
+  async function fetchlogs(currentPage = 1, currentFilters = filters) {
     setLoading(true);
     try {
-      const response = await getAllLogs();
+      const params = {
+        page: currentPage,
+        limit: 10,
+        sortBy: currentFilters.sortBy,
+        sortOrder: currentFilters.sortOrder,
+      };
+
+      if (currentFilters.search.trim()) params.search = currentFilters.search.trim();
+      if (currentFilters.action.trim()) params.action = currentFilters.action.trim();
+      if (currentFilters.startDate) params.startDate = currentFilters.startDate;
+      if (currentFilters.endDate) params.endDate = currentFilters.endDate;
+
+      const response = await getAllLogs(params);
       if (response.success) {
         setLogs(response.data);
+        setPagination(response.pagination || { page: 1, pages: 1, total: response.data?.length || 0, limit: 10 });
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to fetch logs");
+      toast.error(extractApiErrorMessage(error, "Failed to fetch logs"));
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchlogs();
+    fetchlogs(1, filters);
+    fetchActionOptions();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function fetchActionOptions() {
+    try {
+      const response = await getAuditActions();
+      if (response.success) {
+        setActions(response.data || []);
+      }
+    } catch (error) {
+      toast.error(extractApiErrorMessage(error, "Failed to fetch action options"));
+    }
+  }
+
+  const applyFilters = () => fetchlogs(1, filters);
+  const handleExportCsv = async () => {
+    try {
+      setExporting(true);
+      const params = {
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
+      };
+
+      if (filters.search.trim()) params.search = filters.search.trim();
+      if (filters.action.trim()) params.action = filters.action.trim();
+      if (filters.startDate) params.startDate = filters.startDate;
+      if (filters.endDate) params.endDate = filters.endDate;
+
+      const blob = await exportAuditLogsCsv(params);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const datePart = new Date().toISOString().slice(0, 10);
+      a.download = `audit-logs-${datePart}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error(extractApiErrorMessage(error, "Failed to export CSV"));
+    } finally {
+      setExporting(false);
+    }
+  };
+  const resetFilters = () => {
+    const initial = {
+      search: "",
+      action: "",
+      startDate: "",
+      endDate: "",
+      sortBy: "date",
+      sortOrder: "desc",
+    };
+    setFilters(initial);
+    fetchlogs(1, initial);
+  };
 
   const columns = [
     {
@@ -153,27 +236,109 @@ console.log(logs)
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 min-h-[400px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 mb-4">
+          <input
+            value={filters.search}
+            onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
+            placeholder="Search user/task/details..."
+            className="lg:col-span-2 px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg border border-transparent focus:border-primary-400 outline-none"
+          />
+          <select
+            value={filters.action}
+            onChange={(e) => setFilters((prev) => ({ ...prev, action: e.target.value }))}
+            className="px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg border border-transparent focus:border-primary-400 outline-none"
+          >
+            <option value="">All Actions</option>
+            {actions.map((actionName) => (
+              <option key={actionName} value={actionName}>
+                {actionName}
+              </option>
+            ))}
+          </select>
+          <select
+            value={filters.sortBy}
+            onChange={(e) => setFilters((prev) => ({ ...prev, sortBy: e.target.value }))}
+            className="px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg border border-transparent focus:border-primary-400 outline-none"
+          >
+            <option value="date">Sort by Date</option>
+            <option value="action">Sort by Action</option>
+          </select>
+          <select
+            value={filters.sortOrder}
+            onChange={(e) => setFilters((prev) => ({ ...prev, sortOrder: e.target.value }))}
+            className="px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg border border-transparent focus:border-primary-400 outline-none"
+          >
+            <option value="desc">Descending</option>
+            <option value="asc">Ascending</option>
+          </select>
+          <div className="flex gap-2">
+            <button className={btn("primary")} onClick={applyFilters}>Apply</button>
+            <button className={btn("secondary")} onClick={resetFilters}>Reset</button>
+            
+          </div>
+          <input
+            type="date"
+            value={filters.startDate}
+            onChange={(e) => setFilters((prev) => ({ ...prev, startDate: e.target.value }))}
+            className="px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg border border-transparent focus:border-primary-400 outline-none"
+          />
+          <input
+            type="date"
+            value={filters.endDate}
+            onChange={(e) => setFilters((prev) => ({ ...prev, endDate: e.target.value }))}
+            className="px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg border border-transparent focus:border-primary-400 outline-none"
+          />
+          <button className={btn("secondary")} onClick={handleExportCsv} disabled={exporting}>
+            <Download size={15}/>  {exporting ? "Exporting..." : "Export CSV"}
+            </button>
+        </div>
+
         {loading ? (
           <div className="flex flex-col items-center justify-center p-20 gap-3">
             <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
             <p className="text-slate-400 font-medium">Fetching logs...</p>
           </div>
         ) : (
-          <Table
-            columns={columns}
-            data={logs}
-            searchKeys={["userName", "task", "details", "action", "userEmail"]}
-            actions={(row) => (
-              <button
-                className={btn("ghost")}
-                onClick={() => navigate(`/admin/analytics/auditlogs/${row._id || row.id}`)}
-                title="Explore detailed log"
-              >
-                <span className="text-xs font-bold mr-1">Explore</span>
-                <ArrowRightCircle size={15} />
-              </button>
-            )}
-          />
+          <>
+            <Table
+              columns={columns}
+              data={logs}
+              searchKeys={[]}
+              pageSize={10}
+              actions={(row) => (
+                <button
+                  className={btn("ghost")}
+                  onClick={() => navigate(`/admin/analytics/auditlogs/${row._id || row.id}`)}
+                  title="Explore detailed log"
+                >
+                  <span className="text-xs font-bold mr-1">Explore</span>
+                  <ArrowRightCircle size={15} />
+                </button>
+              )}
+            />
+            <div className="mt-4 flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
+              <span>{pagination.total} total logs</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => fetchlogs(pagination.page - 1, filters)}
+                  disabled={pagination.page <= 1}
+                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span>
+                  Page {pagination.page} / {Math.max(pagination.pages, 1)}
+                </span>
+                <button
+                  onClick={() => fetchlogs(pagination.page + 1, filters)}
+                  disabled={pagination.page >= pagination.pages}
+                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>

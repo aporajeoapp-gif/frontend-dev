@@ -99,7 +99,7 @@ export default function EmergencyPage() {
       }
       setModal(null);
     } catch (err) {
-      console.error(err);
+      errorAlert("Failed to save service", err);
     }
   };
 
@@ -112,7 +112,7 @@ export default function EmergencyPage() {
       setLocalList((prev) => prev.filter((s) => (s._id || s.id) !== id));
       successAlert("Service deleted successfully");
     } catch (err) {
-      errorAlert("Failed to delete service");
+      errorAlert("Failed to delete service", err);
     }
   };
 if (!canRead) {

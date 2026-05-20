@@ -349,7 +349,7 @@ export default function UsersPage() {
       removeUser(id);
       successAlert("User deleted successfully");
     } catch (err) {
-      errorAlert("Failed to delete user");
+      errorAlert("Failed to delete user", err);
     }
   };
 

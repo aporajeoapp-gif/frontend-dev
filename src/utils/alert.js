@@ -26,5 +26,28 @@ export const confirmLogout = async () => {
 export const successAlert = (msg) =>
   Swal.fire("Success", msg, "success");
 
-export const errorAlert = (msg) =>
-  Swal.fire("Error", msg, "error");
+export const extractApiErrorMessage = (error, fallback = "Something went wrong") => {
+  if (!error) return fallback;
+  if (typeof error === "string") return error;
+
+  return (
+    error?.response?.data?.message ||
+    error?.response?.data?.error ||
+    error?.message ||
+    fallback
+  );
+};
+
+export const errorAlert = (messageOrError, maybeError) => {
+  let message = "Something went wrong";
+
+  if (maybeError) {
+    message = extractApiErrorMessage(maybeError, messageOrError);
+  } else if (typeof messageOrError === "string") {
+    message = messageOrError;
+  } else {
+    message = extractApiErrorMessage(messageOrError, message);
+  }
+
+  Swal.fire("Error", message, "error");
+};

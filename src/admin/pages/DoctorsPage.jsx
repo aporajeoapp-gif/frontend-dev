@@ -173,7 +173,7 @@ export default function DoctorsPage() {
 
   // ── Permissions ──
   const canCreate = hasPermission(profile, "doctors.create");
-  const canRead   = hasPermission(profile, "doctors.read");
+  const canRead = hasPermission(profile, "doctors.read");
   const canUpdate = hasPermission(profile, "doctors.update");
   const canDelete = hasPermission(profile, "doctors.delete");
 
@@ -227,8 +227,8 @@ export default function DoctorsPage() {
         );
       }
       closeModal();
-    } catch {
-      errorAlert("Failed to save doctor");
+    } catch (error) {
+      errorAlert("Failed to save doctor", error);
     }
   };
 
@@ -240,8 +240,8 @@ export default function DoctorsPage() {
       await deleteDoctor(id);
       setLocalDoctors((prev) => prev.filter((d) => (d._id || d.id) !== id));
       successAlert("Doctor deleted successfully");
-    } catch {
-      errorAlert("Failed to delete doctor");
+    } catch (error) {
+      errorAlert("Failed to delete doctor", error);
     }
   };
 

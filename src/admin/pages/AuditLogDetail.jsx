@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getLogById } from "../../api/auditlogsApi";
+import { extractApiErrorMessage } from "../../utils/alert";
 
 const SEVERITY_CONFIG = {
   low: {
@@ -219,8 +220,8 @@ export default function AuditLogDetail() {
         } else {
           toast.error("Audit log not found");
         }
-      } catch {
-        toast.error("Failed to fetch log details");
+      } catch (error) {
+        toast.error(extractApiErrorMessage(error, "Failed to fetch log details"));
       } finally {
         setLoading(false);
       }
