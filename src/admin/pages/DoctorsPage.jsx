@@ -166,7 +166,15 @@ export default function DoctorsPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
+const [scheduleModal, setScheduleModal] = useState(null); // { name, schedule } | null
+const openScheduleModal = (doc) => {
+  setScheduleModal({
+    name: doc.name,
+    schedule: Array.isArray(doc.schedule) ? doc.schedule : [],
+  });
+};
 
+const closeScheduleModal = () => setScheduleModal(null);
   useEffect(() => {
     if (doctors) setLocalDoctors(doctors);
   }, [doctors]);
@@ -193,44 +201,60 @@ export default function DoctorsPage() {
   );
 
   // ── Modal helpers ──
-  const openAdd = () => {
-    setForm(EMPTY_FORM);
-    setEditId(null);
-    setModal("add");
-  };
-
-  const openEdit = (doc) => {
-    setForm({ ...doc, schedule: Array.isArray(doc.schedule) ? doc.schedule : [] });
-    setEditId(doc._id || doc.id);
-    setModal("edit");
-  };
+ const openAdd = () => {
+  setForm({ ...EMPTY_FORM, schedule: [] });
+  setEditId(null);
+  setModal("add");
+};
+ const openEdit = (doc) => {
+  setForm({
+    ...doc,
+    schedule: Array.isArray(doc.schedule)
+      ? doc.schedule.map((s) => ({
+          day: s?.day || "",
+          time: s?.time || "",
+          chamber: s?.chamber || "",
+        }))
+      : [],
+  });
+  setEditId(doc._id || doc.id);
+  setModal("edit");
+};
 
   const closeModal = () => setModal(null);
 
   // ── Save / Delete ──
   const handleSave = async () => {
-    if (!form.name || !form.specialty) return;
-    const payload = {
-      ...form,
-      schedule: form.schedule.filter((s) => s.day && s.time && s.chamber),
-    };
-    try {
-      if (modal === "add") {
-        const res = await createDoctor(payload);
-        toast.success(res.message);
-        setLocalDoctors((prev) => [res.doctor, ...prev]);
-      } else {
-        const res = await updateDoctor(editId, payload);
-        toast.success(res.message);
-        setLocalDoctors((prev) =>
-          prev.map((d) => ((d._id || d.id) === editId ? res.doctor : d)),
-        );
-      }
-      closeModal();
-    } catch (error) {
-      errorAlert("Failed to save doctor", error);
-    }
+  if (!form.name || !form.specialty) return;
+
+  const payload = {
+    ...form,
+    schedule: (Array.isArray(form.schedule) ? form.schedule : [])
+      .map((s) => ({
+        day: s?.day?.trim() || "",
+        time: s?.time?.trim() || "",
+        chamber: s?.chamber?.trim() || "",
+      }))
+      .filter((s) => s.day || s.time || s.chamber),
   };
+
+  try {
+    if (modal === "add") {
+      const res = await createDoctor(payload);
+      toast.success(res.message);
+      setLocalDoctors((prev) => [res.doctor, ...prev]);
+    } else {
+      const res = await updateDoctor(editId, payload);
+      toast.success(res.message);
+      setLocalDoctors((prev) =>
+        prev.map((d) => ((d._id || d.id) === editId ? res.doctor : d)),
+      );
+    }
+    closeModal();
+  } catch (error) {
+    errorAlert("Failed to save doctor", error);
+  }
+};
 
   const handleDelete = async (doc) => {
     const result = await confirmDelete();
@@ -341,14 +365,19 @@ export default function DoctorsPage() {
 
                     {/* Schedule badge */}
                     <td className="px-4 py-3 whitespace-nowrap">
-                      {doc.schedule?.length > 0 ? (
-                        <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                          <Calendar size={11} /> {doc.schedule.length} slot{doc.schedule.length > 1 ? "s" : ""}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400 text-xs">—</span>
-                      )}
-                    </td>
+  {doc.schedule?.length > 0 ? (
+    <button
+      type="button"
+      onClick={() => openScheduleModal(doc)}
+      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+      title="View schedule"
+    >
+      <Calendar size={11} /> {doc.schedule.length} slot{doc.schedule.length > 1 ? "s" : ""}
+    </button>
+  ) : (
+    <span className="text-slate-400 text-xs">—</span>
+  )}
+</td>
 
                     {/* Actions */}
                     {(canUpdate || canDelete) && (
@@ -395,6 +424,54 @@ export default function DoctorsPage() {
           />
         )}
       </AnimatePresence>
+      <AnimatePresence>
+  {scheduleModal && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={closeScheduleModal}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.97, y: 8 }}
+        transition={{ duration: 0.15 }}
+        className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+            {scheduleModal.name} - Schedule
+          </h2>
+          <button
+            onClick={closeScheduleModal}
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="px-6 py-5 max-h-[70vh] overflow-y-auto">
+          {scheduleModal.schedule.length === 0 ? (
+            <p className="text-sm text-slate-400">No schedule available.</p>
+          ) : (
+            <div className="space-y-2">
+              {scheduleModal.schedule.map((s, i) => (
+                <div
+                  key={i}
+                  className="grid grid-cols-3 gap-2 p-3 rounded-lg border border-slate-200 dark:border-slate-700"
+                >
+                  <div className="text-sm text-slate-700 dark:text-slate-300">{s.day || "—"}</div>
+                  <div className="text-sm text-slate-700 dark:text-slate-300">{s.time || "—"}</div>
+                  <div className="text-sm text-slate-700 dark:text-slate-300">{s.chamber || "—"}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )}
+</AnimatePresence>
     </div>
   );
 }

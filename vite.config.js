@@ -4,6 +4,12 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    watch: {
+      usePolling: true,
+      interval: 150,
+    },
+  },
   optimizeDeps: {
     include: ["react-is", "recharts", "jspdf", "jspdf-autotable"],
   },

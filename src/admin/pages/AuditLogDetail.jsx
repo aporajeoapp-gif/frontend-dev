@@ -35,6 +35,12 @@ const SEVERITY_CONFIG = {
 
 /* ── Format a single value for display ── */
 function formatVal(val) {
+  const renderJson = (value) => (
+    <pre className="text-xs font-mono whitespace-pre-wrap break-words rounded-lg bg-slate-100/80 dark:bg-slate-800/70 px-2 py-1.5 text-slate-700 dark:text-slate-200">
+      {JSON.stringify(value, null, 2)}
+    </pre>
+  );
+
   if (val === null || val === undefined)
     return <span className="italic text-slate-400">null</span>;
   if (typeof val === "boolean")
@@ -46,23 +52,10 @@ function formatVal(val) {
   if (Array.isArray(val)) {
     if (val.length === 0)
       return <span className="text-slate-400 italic">[ empty ]</span>;
-    return (
-      <div className="flex flex-wrap gap-1 mt-0.5">
-        {val.map((v, i) => (
-          <span
-            key={i}
-            className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-[10px] font-mono text-slate-600 dark:text-slate-300"
-          >
-            {String(v)}
-          </span>
-        ))}
-      </div>
-    );
+    return renderJson(val);
   }
   if (typeof val === "object")
-    return (
-      <span className="text-slate-400 italic text-xs">{"{ object }"}</span>
-    );
+    return renderJson(val);
   // truncate long strings like passwords/hashes
   const str = String(val);
   if (str.startsWith("$2b$") || str.startsWith("$2a$"))
