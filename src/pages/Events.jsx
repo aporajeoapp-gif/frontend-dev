@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarDays,
   Clock,
@@ -8,9 +9,12 @@ import {
   Trophy,
   Music,
   Leaf,
+  Search,
+  SlidersHorizontal,
+  ChevronDown
 } from "lucide-react";
-import { useEffect } from "react";
 import PageBanner from "../components/PageBanner";
+import PaginationControls from "../admin/components/ui/PaginationControls";
 import { useTranslation } from "../context/LanguageContext";
 import { useEvents } from "../hooks/eventHook";
 
@@ -45,11 +49,23 @@ const CATEGORY_META = {
 
 export default function Events() {
   const { t } = useTranslation();
-  const { events, fetchEvents, loading } = useEvents();
+  const { events, pagination, fetchEvents, loading } = useEvents();
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+
+  const categories = Object.keys(CATEGORY_META);
 
   useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+    const timer = setTimeout(() => {
+      setParams(p => ({ ...p, search, category, page: 1 }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search, category]);
+
+  useEffect(() => {
+    fetchEvents(params);
+  }, [params, fetchEvents]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -62,6 +78,41 @@ export default function Events() {
         badge="What's Happening"
       />
       <div className="max-w-7xl mx-auto px-4 py-8">
+
+        {/* search + filter bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col sm:flex-row gap-3 mb-6"
+        >
+          {/* search input */}
+          <div className="relative flex-1">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search by event title, location..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-colors"
+            />
+          </div>
+
+          {/* category filter */}
+          <div className="relative">
+            <SlidersHorizontal size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="h-11 pl-10 pr-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/50 appearance-none transition-colors min-w-[170px]"
+            >
+              <option value="" className="bg-white dark:bg-slate-900">All Categories</option>
+              {categories.map((c) => (
+                <option key={c} value={c} className="bg-white dark:bg-slate-900">{c}</option>
+              ))}
+            </select>
+            <ChevronDown size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          </div>
+        </motion.div>
         {loading && events.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full animate-spin mb-4" />
@@ -165,6 +216,15 @@ export default function Events() {
                 </motion.div>
               );
             })}
+          </div>
+        )}
+
+        {events.length > 0 && (
+          <div className="mt-8">
+            <PaginationControls
+              pagination={pagination}
+              onPageChange={(p) => setParams((prev) => ({ ...prev, page: p }))}
+            />
           </div>
         )}
       </div>

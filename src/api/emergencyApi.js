@@ -5,8 +5,8 @@ export const createEmergencyServices=async(data)=>{
     return res.data
 }
 
-export const getAllEmergencyServices=async()=>{
-    const res=await axiosClient.get("/emergency/get-all-emergency-services")
+export const getAllEmergencyServices=async(params)=>{
+    const res=await axiosClient.get("/emergency/get-all-emergency-services", { params })
     return res.data
 }
 

@@ -5,8 +5,8 @@ export const createFerry = async (data) => {
   return res.data;
 };
 
-export const getAllFerries = async () => {
-  const res = await axiosClient.get("/ferry/get-all-ferries");
+export const getAllFerries = async (params) => {
+  const res = await axiosClient.get("/ferry/get-all-ferries", { params });
   return res.data;
 };
 

@@ -3,41 +3,75 @@ import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 
 export default function Table({
   columns,
-  data,
+  data = [],
   searchKeys = [],
   actions,
   pageSize = 8,
+  serverSide = false,
+  pagination = null,
+  onPageChange = null,
+  onSearch = null,
+  searchValue = "",
+  showPagination = true,
 }) {
   const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
+  const [clientPage, setClientPage] = useState(1);
 
-  const filtered = data.filter(
-    (row) =>
-      searchKeys.length === 0 ||
-      searchKeys.some((k) =>
-        String(row[k] ?? "")
-          .toLowerCase()
-          .includes(query.toLowerCase()),
-      ),
-  );
+  const activeQuery = serverSide ? searchValue : query;
+  const activePage = serverSide && pagination ? pagination.page : clientPage;
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const handleSearch = (e) => {
+    const val = e.target.value;
+    if (serverSide && onSearch) {
+      onSearch(val);
+    } else {
+      setQuery(val);
+      setClientPage(1);
+    }
+  };
+
+  const handlePageChange = (newPage) => {
+    if (serverSide && onPageChange) {
+      onPageChange(newPage);
+    } else {
+      setClientPage(newPage);
+    }
+  };
+
+  const filtered = serverSide
+    ? data
+    : data.filter(
+        (row) =>
+          searchKeys.length === 0 ||
+          searchKeys.some((k) =>
+            String(row[k] ?? "")
+              .toLowerCase()
+              .includes(activeQuery.toLowerCase()),
+          ),
+      );
+
+  const totalPages =
+    serverSide && pagination
+      ? pagination.totalPages
+      : Math.max(1, Math.ceil(filtered.length / pageSize));
+
+  const paginated = serverSide
+    ? data
+    : filtered.slice((activePage - 1) * pageSize, activePage * pageSize);
+
+  const totalResults = serverSide && pagination ? pagination.total : filtered.length;
 
   return (
     <div className="space-y-3">
-      {searchKeys.length > 0 && (
+      {(searchKeys.length > 0 || serverSide) && (
         <div className="relative max-w-xs">
           <Search
             size={14}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
           />
           <input
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setPage(1);
-            }}
+            value={activeQuery}
+            onChange={handleSearch}
             placeholder="Search..."
             className="w-full pl-8 pr-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg border border-transparent focus:border-primary-400 dark:focus:border-primary-500 outline-none text-slate-700 dark:text-slate-300 placeholder-slate-400 transition-colors"
           />
@@ -64,7 +98,7 @@ export default function Table({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-            {paginated.length === 0 ? (
+            {!paginated || paginated.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length + (actions ? 1 : 0)}
@@ -76,7 +110,7 @@ export default function Table({
             ) : (
               paginated.map((row, i) => (
                 <tr
-                  key={row.id ?? i}
+                  key={row._id ?? row.id ?? i}
                   className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
                 >
                   {columns.map((col) => (
@@ -103,23 +137,23 @@ export default function Table({
         </table>
       </div>
 
-      {totalPages > 1 && (
+      {showPagination && totalPages > 1 && (
         <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
-          <span>{filtered.length} results</span>
+          <span>{totalResults} results</span>
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
+              onClick={() => handlePageChange(Math.max(1, activePage - 1))}
+              disabled={activePage === 1}
               className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft size={16} />
             </button>
             <span className="px-2">
-              {page} / {totalPages}
+              {activePage} / {totalPages}
             </span>
             <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
+              onClick={() => handlePageChange(Math.min(totalPages, activePage + 1))}
+              disabled={activePage === totalPages}
               className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={16} />

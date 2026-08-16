@@ -1,7 +1,7 @@
 import axiosClient from "./axiosClient"
 
-export const getDoctors=async()=>{
-    const res=await axiosClient.get("/doctor/get-all-doctors")
+export const getDoctors=async(params)=>{
+    const res=await axiosClient.get("/doctor/get-all-doctors", { params })
     return res.data
 }
 

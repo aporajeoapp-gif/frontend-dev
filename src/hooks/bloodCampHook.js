@@ -3,14 +3,20 @@ import bloodCampApi from "../api/bloodCampApi";
 
 export const useBloodCamp = () => {
   const [camps, setCamps] = useState([]);
+  const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchCamps = useCallback(async () => {
+  const fetchCamps = useCallback(async (params = {}) => {
     setLoading(true);
     try {
-      const response = await bloodCampApi.getAllCamps();
-      setCamps(response.data);
+      const response = await bloodCampApi.getAllCamps(params);
+      if (response.data?.data) {
+        setCamps(response.data.data);
+        setPagination(response.data.pagination);
+      } else {
+        setCamps(response.data);
+      }
       setError(null);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch camps");
@@ -108,10 +114,10 @@ export const useBloodCamp = () => {
     }
   }, []);
 
-  const fetchDonors = useCallback(async (campId) => {
+  const fetchDonors = useCallback(async (campId, params = {}) => {
     setLoading(true);
     try {
-      const response = await bloodCampApi.getCampDonors(campId);
+      const response = await bloodCampApi.getCampDonors(campId, params);
       return { success: true, data: response.data };
     } catch (err) {
       return { success: false, message: err.response?.data?.message || "Failed to fetch donors" };
@@ -134,6 +140,7 @@ export const useBloodCamp = () => {
 
   return {
     camps,
+    pagination,
     loading,
     error,
     fetchCamps,

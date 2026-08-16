@@ -17,6 +17,7 @@ import { useBloodCamp } from "../../hooks/bloodCampHook";
 import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
 import fetchUser from "../../hooks/userhook";
 import { hasPermission } from "../../utils/rbac";
+import PaginationControls from "../components/ui/PaginationControls";
 
 const inp =
   "w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-primary-400 dark:focus:border-primary-500 text-slate-800 dark:text-slate-200 placeholder-slate-400 transition-colors";
@@ -347,22 +348,24 @@ function CampForm({ value, onChange }) {
 
 export default function BloodDonationPage() {
   const navigate = useNavigate();
-  const { camps, loading, fetchCamps, createCamp, updateCamp, deleteCamp } = useBloodCamp();
+  const { camps, pagination, loading, fetchCamps, createCamp, updateCamp, deleteCamp } = useBloodCamp();
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState(empty);
   const [search, setSearch] = useState("");
   const { profile } = fetchUser();
+  const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setParams(p => ({ ...p, search, page: 1 }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
-    fetchCamps();
-  }, [fetchCamps]);
-
-  const filtered = camps.filter(
-    (c) =>
-      c.campName.toLowerCase().includes(search.toLowerCase()) ||
-      c.organizer.toLowerCase().includes(search.toLowerCase()) ||
-      c.location.toLowerCase().includes(search.toLowerCase()),
-  );
+    fetchCamps(params);
+  }, [fetchCamps, params]);
 
   const openAdd = () => {
     setForm(empty);
@@ -468,7 +471,7 @@ export default function BloodDonationPage() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(({ label, value, Icon, color, bg }) => (
+        {stats.map(({ label, value,Icon, color, bg }) => (
           <div
             key={label}
             className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex items-center gap-3"
@@ -515,12 +518,12 @@ export default function BloodDonationPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-              {filtered.length === 0 ? (
+              {camps.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-12 text-center text-sm text-slate-500 italic">No camps found matching your search.</td>
                 </tr>
               ) : (
-                filtered.map((camp, i) => (
+                camps.map((camp, i) => (
                   <motion.tr
                     key={camp._id}
                     initial={{ opacity: 0, y: 10 }}
@@ -612,6 +615,11 @@ export default function BloodDonationPage() {
           </table>
         </div>
       </div>
+
+      <PaginationControls
+        pagination={pagination}
+        onPageChange={(p) => setParams((prev) => ({ ...prev, page: p }))}
+      />
 
       <Modal
         open={!!modal}

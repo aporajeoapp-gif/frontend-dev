@@ -3,14 +3,21 @@ import { getDoctors } from "../api/doctorApi";
 
 export default function useDoctors() {
     const [doctors, setDoctors] = useState([])
+    const [pagination, setPagination] = useState(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
 
-    const fetchDoctors = async () => {
+    const fetchDoctors = async (params = {}) => {
         try {
             setLoading(true)
-            const data = await getDoctors()
-            setDoctors(data)
+            const response = await getDoctors(params)
+            if (response.data) {
+                setDoctors(response.data)
+                setPagination(response.pagination)
+            } else {
+                setDoctors(response)
+            }
+            return response
         } catch (err) {
             setError(err)
         } finally {
@@ -18,12 +25,9 @@ export default function useDoctors() {
         }
     }
 
-    useEffect(() => {
-        fetchDoctors()
-    }, [])
-
     return {
         doctors,
+        pagination,
         loading,
         error,
         refresh: fetchDoctors

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Ship, Clock, Banknote, Anchor,
@@ -7,6 +7,7 @@ import {
 import PageBanner from "../components/PageBanner";
 import { useTranslation } from "../context/LanguageContext";
 import useFerries from "../hooks/ferryhook";
+import PaginationControls from "../admin/components/ui/PaginationControls";
 
 function parseTime(timeStr) {
   if (!timeStr) return null;
@@ -33,32 +34,40 @@ function getDuration(dep, arr) {
 
 export default function Ferry() {
   const { t } = useTranslation();
-  const { ferries = [] } = useFerries();
+  const { ferries = [], pagination, refresh } = useFerries();
   const [view, setView] = useState("table");
   const [search, setSearch] = useState("");
   const [routeFilter, setRouteFilter] = useState("");
+  const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setParams(p => ({ ...p, search, page: 1 }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    refresh(params);
+  }, [params]);
 
   const routeNames = useMemo(() => {
     return [...new Set(ferries.map((f) => Array.isArray(f.routeName) ? f.routeName.join(" → ") : f.routeName))].filter(Boolean);
   }, [ferries]);
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase();
+    if (!routeFilter) return ferries;
     return ferries.filter((s) => {
       const rNameFull = Array.isArray(s.routeName) ? s.routeName.join(" → ") : s.routeName;
-      const matchSearch =
-        rNameFull.toLowerCase().includes(q) ||
-        s.stops.some((st) => st.toLowerCase().includes(q));
-      const matchRoute = !routeFilter || rNameFull === routeFilter;
-      return matchSearch && matchRoute;
+      return rNameFull === routeFilter;
     });
-  }, [ferries, search, routeFilter]);
+  }, [ferries, routeFilter]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
       <PageBanner
         title="Ferry Services"
-        subtitle={`${filtered.length} active waterway routes`}
+        subtitle={`${pagination?.total || filtered.length} active waterway routes`}
         image="https://images.unsplash.com/photo-1605281317010-fe5ffe798166?w=1400&auto=format&fit=crop&q=80"
         gradient="from-cyan-900/85 via-blue-900/75 to-slate-900/80"
         Icon={Ship}
@@ -293,6 +302,13 @@ export default function Ferry() {
           )}
 
         </AnimatePresence>
+
+        <div className="mt-8">
+          <PaginationControls
+            pagination={pagination}
+            onPageChange={(p) => setParams((prev) => ({ ...prev, page: p }))}
+          />
+        </div>
       </div>
     </div>
   );

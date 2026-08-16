@@ -10,6 +10,7 @@ import useEmergencyServices from "../../hooks/emergencyHook";
 import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
 import fetchUser from "../../hooks/userhook";
 import { hasPermission } from "../../utils/rbac";
+import PaginationControls from "../components/ui/PaginationControls";
 
 const inp =
   "w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-primary-400 dark:focus:border-primary-500 text-slate-800 dark:text-slate-200 placeholder-slate-400 transition-colors";
@@ -43,12 +44,25 @@ const empty = {
 };
 
 export default function EmergencyPage() {
-  const { emergencies } = useEmergencyServices();
+  const { emergencies, pagination, refresh } = useEmergencyServices();
   const { profile } = fetchUser();
   const [localList, setLocalList] = useState([]);
   const [modal, setModal] = useState(null); // null | "add" | "edit"
   const [form, setForm] = useState(empty);
   const [editId, setEditId] = useState(null);
+  const [search, setSearch] = useState("");
+  const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setParams(p => ({ ...p, search, page: 1 }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    refresh(params);
+  }, [params]);
 
   useEffect(() => {
     if (emergencies) setLocalList(emergencies);
@@ -89,14 +103,11 @@ export default function EmergencyPage() {
 
     try {
       if (modal === "add") {
-        const res = await createEmergencyServices(payload);
-        const created = res?.data?.service ?? res?.data ?? { ...payload, _id: String(Date.now()) };
-        setLocalList((prev) => [created, ...prev]);
+        await createEmergencyServices(payload);
       } else {
-        const res = await updateEmergencyService(editId, payload);
-        const updated = res?.data?.service ?? res?.data ?? { ...payload, _id: editId };
-        setLocalList((prev) => prev.map((s) => (s._id || s.id) === editId ? updated : s));
+        await updateEmergencyService(editId, payload);
       }
+      refresh(params);
       setModal(null);
     } catch (err) {
       errorAlert("Failed to save service", err);
@@ -109,32 +120,43 @@ export default function EmergencyPage() {
     const id = ES._id || ES.id;
     try {
       await deleteEmergencyService(id);
-      setLocalList((prev) => prev.filter((s) => (s._id || s.id) !== id));
+      refresh(params);
       successAlert("Service deleted successfully");
     } catch (err) {
       errorAlert("Failed to delete service", err);
     }
   };
-if (!canRead) {
+
+  if (!canRead) {
     return (
       <div className="flex items-center justify-center py-20 text-slate-400 text-sm">
         You don't have permission to view emergency page.
       </div>
     );
   }
+
   return (
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Emergency Services</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{localList.length} services</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{pagination?.total || localList.length} services</p>
         </div>
         {canCreate && (
           <button className={btn()} onClick={openAdd}>
             <Plus size={15} /> Add Service
           </button>
         )}
+      </div>
+
+      <div className="flex items-center gap-4">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search services..."
+          className="w-full max-w-xs px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg border border-transparent focus:border-primary-400 outline-none text-slate-700 dark:text-slate-300 placeholder-slate-400 transition-colors"
+        />
       </div>
 
       {/* Cards */}
@@ -188,6 +210,11 @@ if (!canRead) {
           })}
         </div>
       )}
+
+      <PaginationControls
+        pagination={pagination}
+        onPageChange={(p) => setParams((prev) => ({ ...prev, page: p }))}
+      />
 
       {/* Modal */}
       {!!modal && (

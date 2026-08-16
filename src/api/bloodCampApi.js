@@ -1,7 +1,7 @@
 import axiosClient from "./axiosClient";
 
 const bloodCampApi = {
-  getAllCamps: () => axiosClient.get("/blood-camp/get-all-camps"),
+  getAllCamps: (params) => axiosClient.get("/blood-camp/get-all-camps", { params }),
   getCampById: (id) => axiosClient.get(`/blood-camp/get-camp/${id}`),
   createCamp: (data) => {
     const formData = new FormData();
@@ -36,7 +36,7 @@ const bloodCampApi = {
   deleteCamp: (id) => axiosClient.delete(`/blood-camp/delete-camp/${id}`),
   addDonor: (data) => axiosClient.post("/blood-camp/add-donor", data),
   publicAddDonor: (data) => axiosClient.post("/blood-camp/public-add-donor", data),
-  getCampDonors: (campId) => axiosClient.get(`/blood-camp/get-camp-donors/${campId}`),
+  getCampDonors: (campId, params) => axiosClient.get(`/blood-camp/get-camp-donors/${campId}`, { params }),
   deleteDonor: (id) => axiosClient.delete(`/blood-camp/delete-donor/${id}`),
   approveDonor: (id) => axiosClient.patch(`/blood-camp/approve-donor/${id}`),
 };

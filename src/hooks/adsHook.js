@@ -3,14 +3,20 @@ import adsApi from "../api/adsApi";
 
 export const useAds = () => {
   const [ads, setAds] = useState([]);
+  const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchAds = useCallback(async (status) => {
+  const fetchAds = useCallback(async (params = {}) => {
     setLoading(true);
     try {
-      const response = await adsApi.getAllAds(status);
-      setAds(response.data);
+      const response = await adsApi.getAllAds(params);
+      if (response.data?.data) {
+        setAds(response.data.data);
+        setPagination(response.data.pagination);
+      } else {
+        setAds(response.data);
+      }
       setError(null);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch advertisements");
@@ -60,6 +66,7 @@ export const useAds = () => {
 
   return {
     ads,
+    pagination,
     loading,
     error,
     fetchAds,

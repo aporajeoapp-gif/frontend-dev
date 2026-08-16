@@ -6,6 +6,7 @@ import { useEvents } from "../../hooks/eventHook";
 import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
 import fetchUser from "../../hooks/userhook";
 import { hasPermission } from "../../utils/rbac";
+import PaginationControls from "../components/ui/PaginationControls";
 
 const inp =
   "w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-primary-400 dark:focus:border-primary-500 text-slate-800 dark:text-slate-200 placeholder-slate-400 transition-colors";
@@ -106,21 +107,25 @@ const categoryColors = {
 };
 
 export default function EventsPage() {
-  const { events, loading, fetchEvents, createEvent, updateEvent, deleteEvent } = useEvents();
+  const { events, pagination, loading, fetchEvents, createEvent, updateEvent, deleteEvent } = useEvents();
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState(empty);
   const [search, setSearch] = useState("");
+  const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
   const [preview, setPreview] = useState(null);
 const { profile } = fetchUser();
-  useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
 
-  const filtered = events.filter(
-    (e) =>
-      e.title.toLowerCase().includes(search.toLowerCase()) ||
-      e.category.toLowerCase().includes(search.toLowerCase()),
-  );
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setParams(p => ({ ...p, search, page: 1 }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    fetchEvents(params);
+  }, [fetchEvents, params]);
 
   const openAdd = () => {
     setForm(empty);
@@ -215,9 +220,9 @@ const { profile } = fetchUser();
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((ev, i) => (
+        {events.map((ev, i) => (
           <motion.div
-            key={ev._id}
+            key={ev._id || ev.id}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.04 }}
@@ -279,7 +284,7 @@ const { profile } = fetchUser();
                   {canDelete && (
                     <button
                       className={btn("ghost")}
-                      onClick={() => handleDelete(ev._id)}
+                      onClick={() => handleDelete(ev._id || ev.id)}
                     >
                       <Trash2 size={13} className="text-red-500" />
                     </button>
@@ -290,6 +295,11 @@ const { profile } = fetchUser();
           </motion.div>
         ))}
       </div>
+
+      <PaginationControls
+        pagination={pagination}
+        onPageChange={(p) => setParams((prev) => ({ ...prev, page: p }))}
+      />
 
       <Modal
         open={!!modal}

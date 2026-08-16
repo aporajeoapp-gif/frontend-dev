@@ -30,11 +30,13 @@ const TAG_COLORS = {
   Default:    { light: "#8b5cf6", dark: "#c4b5fd" }
 };
 
+const EASE = "cubic-bezier(0.22, 1, 0.36, 1)"; // smooth "ease-out-expo" feel
+
 /* ── Single ad card ─────────────────────────────────────────────────────── */
 function AdCard({ ad, dark, didDragRef }) {
   const tagMeta = TAG_COLORS[ad.tag] || TAG_COLORS.Default;
-  const accent = dark 
-    ? (ad.colorDark || tagMeta.dark) 
+  const accent = dark
+    ? (ad.colorDark || tagMeta.dark)
     : (ad.color || tagMeta.light);
 
   return (
@@ -46,14 +48,34 @@ function AdCard({ ad, dark, didDragRef }) {
       onClick={(e) => {
         if (didDragRef.current) e.preventDefault();
       }}
-      className="group relative shrink-0 w-[290px] mx-2.5 flex flex-col overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1.5 select-none"
+      className="group relative shrink-0 w-[290px] mx-2.5 flex flex-col overflow-hidden rounded-2xl select-none"
       style={{
-        background: dark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.85)",
-        border: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"}`,
+        background: dark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.88)",
+        border: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"}`,
         backdropFilter: "blur(12px)",
         boxShadow: dark
-          ? "0 4px 24px rgba(0,0,0,0.4)"
-          : "0 4px 20px rgba(0,0,0,0.08)",
+          ? "0 4px 24px rgba(0,0,0,0.35)"
+          : "0 4px 18px rgba(15,23,42,0.06)",
+        transform: "translateY(0) scale(1)",
+        transition: `transform 0.45s ${EASE}, box-shadow 0.45s ${EASE}, border-color 0.45s ${EASE}`,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-6px) scale(1.015)";
+        e.currentTarget.style.boxShadow = dark
+          ? "0 16px 40px rgba(0,0,0,0.5)"
+          : "0 16px 36px rgba(15,23,42,0.14)";
+        e.currentTarget.style.borderColor = dark
+          ? "rgba(255,255,255,0.16)"
+          : "rgba(0,0,0,0.1)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0) scale(1)";
+        e.currentTarget.style.boxShadow = dark
+          ? "0 4px 24px rgba(0,0,0,0.35)"
+          : "0 4px 18px rgba(15,23,42,0.06)";
+        e.currentTarget.style.borderColor = dark
+          ? "rgba(255,255,255,0.08)"
+          : "rgba(0,0,0,0.06)";
       }}
     >
       {/* Image */}
@@ -63,12 +85,13 @@ function AdCard({ ad, dark, didDragRef }) {
             src={ad.image || ad.imageUrl}
             alt={ad.title}
             draggable={false}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className="w-full h-full object-cover"
+            style={{ transition: `transform 0.7s ${EASE}` }}
             loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-400">
-             <ImageIcon size={32} />
+            <ImageIcon size={32} />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -116,106 +139,139 @@ function AdCard({ ad, dark, didDragRef }) {
             </span>
           </div>
           <span
-            className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg text-white transition-all duration-200 group-hover:gap-2.5"
-            style={{ background: accent }}
+            className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg text-white"
+            style={{
+              background: accent,
+              transition: `gap 0.3s ${EASE}, transform 0.3s ${EASE}`,
+            }}
           >
-            {ad.cta} →
+            {ad.cta}
+            <span
+              className="inline-block"
+              style={{ transition: `transform 0.3s ${EASE}` }}
+            >
+              →
+            </span>
           </span>
         </div>
       </div>
 
       {/* Hover inset glow */}
       <div
-        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-        style={{ boxShadow: `inset 0 0 0 1.5px ${accent}55` }}
+        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 pointer-events-none"
+        style={{
+          boxShadow: `inset 0 0 0 1.5px ${accent}55`,
+          transition: `opacity 0.45s ${EASE}`,
+        }}
       />
     </a>
   );
 }
 
 /* ── Constants ──────────────────────────────────────────────────────────── */
-const AUTO_SPEED = 32;   // px/s
-const FRICTION   = 0.88; // momentum decay per frame
-const MAX_DT     = 50;   // ms — cap to avoid jumps after tab-hide
+const AUTO_SPEED = 32;    // px/s target cruise speed
+const VEL_SMOOTH = 0.085; // per-16.67ms lerp factor toward target velocity (higher = snappier)
+const MAX_DT     = 50;    // ms — cap to avoid jumps after tab-hide
 
 /* ── Marquee track ──────────────────────────────────────────────────────── */
 function MarqueeTrack({ dark, ads }) {
-  const trackRef    = useRef(null);
-  const posRef      = useRef(0);
-  const halfWRef    = useRef(0);
-  const rafRef      = useRef(null);
+  const containerRef = useRef(null);
+  const trackRef      = useRef(null);
+  const posRef        = useRef(0);
+  const halfWRef      = useRef(0);
+  const rafRef        = useRef(null);
+  const initializedRef = useRef(false);
 
-  // Interaction state in refs — no re-renders needed
   const hoveredRef  = useRef(false);
   const pressingRef = useRef(false);
   const didDragRef  = useRef(false);
   const startXRef   = useRef(0);
   const lastXRef    = useRef(0);
   const lastTRef    = useRef(0);
-  const velRef      = useRef(0);       // px/ms
+  const velRef      = useRef(0); // px/ms, unified drag + auto-scroll velocity
   const prevTRef    = useRef(null);
 
-  // 3 copies for seamless bidirectional loop
   const tripled = [...ads, ...ads, ...ads];
 
-  /* RAF loop */
+  /* Recompute layout whenever ad set changes (fixes async-loaded ads) */
   useEffect(() => {
     const track = trackRef.current;
-    if (!track) return;
-
-    // Initialise to middle copy after first paint
-    const init = requestAnimationFrame(() => {
+    if (!track || ads.length === 0) return;
+    const raf = requestAnimationFrame(() => {
       halfWRef.current = track.scrollWidth / 3;
-      posRef.current   = -halfWRef.current;
+      if (!initializedRef.current) {
+        posRef.current = -halfWRef.current;
+        initializedRef.current = true;
+      }
       track.style.transform = `translateX(${posRef.current}px)`;
     });
+    return () => cancelAnimationFrame(raf);
+  }, [ads.length]);
 
+  /* Main animation loop */
+  useEffect(() => {
     const step = (ts) => {
-      const dt   = prevTRef.current !== null
+      const dt = prevTRef.current !== null
         ? Math.min(ts - prevTRef.current, MAX_DT)
         : 0;
       prevTRef.current = ts;
 
       const half = halfWRef.current;
 
-      if (!pressingRef.current) {
-        if (Math.abs(velRef.current) > 0.05) {
-          // Coast with momentum
-          posRef.current += velRef.current * dt;
-          velRef.current *= FRICTION;
-        } else if (!hoveredRef.current) {
-          // Normal auto-scroll
-          velRef.current  = 0;
-          posRef.current -= (AUTO_SPEED / 1000) * dt;
-        }
-        // hovering + vel~0 → do nothing (fully stopped)
+      if (!pressingRef.current && dt > 0) {
+        const target = hoveredRef.current ? 0 : -(AUTO_SPEED / 1000);
+        // Smooth, framerate-independent lerp toward target velocity —
+        // handles flick-momentum decay AND hover pause/resume in one motion.
+        const t = 1 - Math.pow(1 - VEL_SMOOTH, dt / 16.67);
+        velRef.current += (target - velRef.current) * t;
+        posRef.current += velRef.current * dt;
       }
 
-      // Seamless clamp: stay within the middle copy range
       if (half > 0) {
         if (posRef.current <= -half * 2) posRef.current += half;
-        if (posRef.current >  -half)     posRef.current -= half;
+        if (posRef.current > -half)      posRef.current -= half;
       }
 
-      track.style.transform = `translateX(${posRef.current}px)`;
+      if (trackRef.current) {
+        trackRef.current.style.transform = `translateX(${posRef.current}px)`;
+      }
       rafRef.current = requestAnimationFrame(step);
     };
 
     rafRef.current = requestAnimationFrame(step);
-    return () => {
-      cancelAnimationFrame(init);
-      cancelAnimationFrame(rafRef.current);
-    };
+    return () => cancelAnimationFrame(rafRef.current);
   }, []);
 
-  /* Shared pointer helpers */
+  /* Non-passive touchmove so preventDefault reliably stops page scroll */
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleTouchMove = (e) => {
+      const t  = e.touches[0];
+      const dx = Math.abs(t.clientX - startXRef.current);
+      const dy = Math.abs(t.clientY - touchStartYRef.current);
+
+      if (!isHorizRef.current && dy > dx) {
+        onEnd();
+        return;
+      }
+      isHorizRef.current = true;
+      e.preventDefault();
+      onMove(t.clientX);
+    };
+
+    el.addEventListener("touchmove", handleTouchMove, { passive: false });
+    return () => el.removeEventListener("touchmove", handleTouchMove);
+  }, []);
+
   const onStart = (clientX) => {
     pressingRef.current = true;
     didDragRef.current  = false;
-    velRef.current      = 0;
     startXRef.current   = clientX;
     lastXRef.current    = clientX;
     lastTRef.current    = performance.now();
+    if (containerRef.current) containerRef.current.style.cursor = "grabbing";
   };
 
   const onMove = (clientX) => {
@@ -227,19 +283,18 @@ function MarqueeTrack({ dark, ads }) {
     if (Math.abs(clientX - startXRef.current) > 4) didDragRef.current = true;
 
     posRef.current  += dx;
-    velRef.current   = dx / dt;
+    velRef.current   = dx / dt; // becomes the starting point for the eased coast-down
     lastXRef.current = clientX;
     lastTRef.current = now;
   };
 
   const onEnd = () => {
     pressingRef.current = false;
-    // velRef keeps its value → momentum handled in RAF
+    if (containerRef.current) containerRef.current.style.cursor = "grab";
   };
 
-  /* Touch — respect vertical scroll */
-  const touchStartYRef  = useRef(0);
-  const isHorizRef      = useRef(false);
+  const touchStartYRef = useRef(0);
+  const isHorizRef     = useRef(false);
 
   const handleTouchStart = (e) => {
     touchStartYRef.current = e.touches[0].clientY;
@@ -247,23 +302,9 @@ function MarqueeTrack({ dark, ads }) {
     onStart(e.touches[0].clientX);
   };
 
-  const handleTouchMove = (e) => {
-    const t  = e.touches[0];
-    const dx = Math.abs(t.clientX - startXRef.current);
-    const dy = Math.abs(t.clientY - touchStartYRef.current);
-
-    if (!isHorizRef.current && dy > dx) {
-      // Vertical swipe — release and let the page scroll
-      onEnd();
-      return;
-    }
-    isHorizRef.current = true;
-    e.preventDefault(); // block page scroll only for horizontal swipes
-    onMove(t.clientX);
-  };
-
   return (
     <div
+      ref={containerRef}
       className="overflow-hidden w-full py-3 select-none"
       style={{ cursor: "grab", touchAction: "pan-y" }}
       onMouseEnter={() => { hoveredRef.current = true; }}
@@ -272,7 +313,6 @@ function MarqueeTrack({ dark, ads }) {
       onMouseMove={(e) => onMove(e.clientX)}
       onMouseUp={onEnd}
       onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
       onTouchEnd={onEnd}
       onTouchCancel={onEnd}
     >
@@ -300,7 +340,7 @@ export default function AdSection() {
   const { ads, fetchAds, loading } = useAds();
 
   useEffect(() => {
-    fetchAds("active");
+    fetchAds({ status: "active" });
   }, [fetchAds]);
 
   if (!loading && ads.length === 0) return null;
@@ -313,13 +353,12 @@ export default function AdSection() {
 
   return (
     <section className="overflow-hidden py-12" style={{ background: sectionBg }}>
-
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="flex flex-col items-center gap-2 mb-10 px-4 text-center"
       >
         <div

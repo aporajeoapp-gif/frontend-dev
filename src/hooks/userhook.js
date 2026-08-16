@@ -26,14 +26,19 @@ export default function fetchUser() {
 
 export function useUsers() {
   const [users, setUsers] = useState([]);
+  const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const loadUsers = async () => {
+  const loadUsers = async (params = {}) => {
     try {
       setLoading(true);
-      const data = await getAllUsers();
-      // console.log("All Users From Hook",data)
-      setUsers(data);
+      const response = await getAllUsers(params);
+      if (response.data) {
+        setUsers(response.data);
+        setPagination(response.pagination);
+      } else {
+        setUsers(response);
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -49,9 +54,5 @@ export function useUsers() {
   const removeUser = (id) =>
     setUsers((prev) => prev.filter((u) => (u._id || u.id) !== id));
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  return { users, loading, addUser, updateUser, removeUser };
+  return { users, pagination, loading, addUser, updateUser, removeUser, refresh: loadUsers };
 }

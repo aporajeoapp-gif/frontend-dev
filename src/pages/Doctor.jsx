@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Stethoscope, MapPin, Phone, Mail, Award,
@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import PageBanner from "../components/PageBanner";
 import useDoctors from "../hooks/doctorhook";
+import PaginationControls from "../admin/components/ui/PaginationControls";
 
 // ── specialty badge ───────────────────────────────────────────────────────────
 
@@ -119,25 +120,30 @@ function BookingModal({ doctor, onClose }) {
 // ── main page ─────────────────────────────────────────────────────────────────
 
 export default function Doctor() {
-  const { doctors = [] } = useDoctors();
+  const { doctors = [], pagination, refresh } = useDoctors();
 
   const [search, setSearch]       = useState("");
   const [specialty, setSpecialty] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setParams(p => ({ ...p, search, page: 1 }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    refresh(params);
+  }, [params]);
 
   const specialties = [...new Set(doctors.map((d) => d.specialty))];
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    return doctors.filter((d) => {
-      const matchSearch =
-        d.name.toLowerCase().includes(q) ||
-        d.specialty.toLowerCase().includes(q) ||
-        d.location.toLowerCase().includes(q);
-      const matchSpecialty = !specialty || d.specialty === specialty;
-      return matchSearch && matchSpecialty;
-    });
-  }, [doctors, search, specialty]);
+    if (!specialty) return doctors;
+    return doctors.filter((d) => d.specialty === specialty);
+  }, [doctors, specialty]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
@@ -145,7 +151,7 @@ export default function Doctor() {
       {/* banner */}
       <PageBanner
         title="Find Doctors"
-        subtitle={`${filtered.length} verified specialists near you`}
+        subtitle={`${pagination?.total || filtered.length} verified specialists near you`}
         image="https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=1400&auto=format&fit=crop&q=80"
         gradient="from-primary-900/85 via-violet-900/75 to-slate-900/80"
         Icon={Stethoscope}
@@ -291,6 +297,13 @@ export default function Doctor() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <div className="mt-8">
+          <PaginationControls
+            pagination={pagination}
+            onPageChange={(p) => setParams((prev) => ({ ...prev, page: p }))}
+          />
+        </div>
       </div>
 
       {/* booking modal */}

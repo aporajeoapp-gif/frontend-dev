@@ -16,6 +16,7 @@ import { useAds } from "../../hooks/adsHook";
 import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
 import fetchUser from "../../hooks/userhook";
 import { hasPermission } from "../../utils/rbac";
+import PaginationControls from "../components/ui/PaginationControls";
 
 const inp =
   "w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-primary-400 dark:focus:border-primary-500 text-slate-800 dark:text-slate-200 placeholder-slate-400 transition-colors";
@@ -95,15 +96,25 @@ const formatDateForInput = (d) => {
 };
 
 export default function AdsPage() {
-  const { ads, loading, fetchAds, createAd, updateAd, deleteAd } = useAds();
+  const { ads, pagination, loading, fetchAds, createAd, updateAd, deleteAd } = useAds();
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState(empty);
   const [preview, setPreview] = useState(null);
   const { profile } = fetchUser();
+  const [search, setSearch] = useState("");
+  const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setParams(p => ({ ...p, search, page: 1 }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
-    fetchAds();
-  }, [fetchAds]);
+    fetchAds(params);
+  }, [fetchAds, params]);
 
   const openAdd = () => {
     setForm(empty);
@@ -197,6 +208,16 @@ export default function AdsPage() {
         )}
       </div>
 
+      <div className="flex items-center gap-4">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search ads..."
+          className="w-full max-w-xs px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg border border-transparent focus:border-primary-400 outline-none text-slate-700 dark:text-slate-300 placeholder-slate-400 transition-colors"
+        />
+        {loading && <div className="text-xs text-slate-500 animate-pulse">Processing...</div>}
+      </div>
+
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {ads.map((ad, i) => (
           <motion.div
@@ -224,7 +245,7 @@ export default function AdsPage() {
                   {ad.tag}
                 </span>
               </div>
-              <div className="absolute top-2 right-2">
+              {/* <div className="absolute top-2 right-2">
                 {canUpdate && (
                   <button onClick={() => toggleActive(ad)} className="text-white">
                     {ad.status === "active" ? (
@@ -234,7 +255,7 @@ export default function AdsPage() {
                     )}
                   </button>
                 )}
-              </div>
+              </div> */}
             </div>
             <div className="p-4">
               <div className="flex items-start justify-between gap-2">
@@ -285,6 +306,11 @@ export default function AdsPage() {
           </motion.div>
         ))}
       </div>
+
+      <PaginationControls
+        pagination={pagination}
+        onPageChange={(p) => setParams((prev) => ({ ...prev, page: p }))}
+      />
 
       <Modal
         open={!!modal}

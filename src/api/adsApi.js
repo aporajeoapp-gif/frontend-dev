@@ -1,7 +1,7 @@
 import axiosClient from "./axiosClient";
 
 const adsApi = {
-  getAllAds: (status) => axiosClient.get("/ads/get-all-ads", { params: { status } }),
+  getAllAds: (params) => axiosClient.get("/ads/get-all-ads", { params }),
   createAd: (data) => {
     const formData = new FormData();
     Object.keys(data).forEach((key) => {

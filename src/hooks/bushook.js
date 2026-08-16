@@ -1,32 +1,35 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { getAllBuses } from "../api/busApi";
 // import { getAllBuses } from "../api/busapi";
 
 export default function useBuses() {
   const [buses, setBuses] = useState([]);
+  const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchBuses = async () => {
+  const fetchBuses = useCallback(async (params = {}) => {
     try {
       setLoading(true);
-      const data = await getAllBuses();
-      setBuses(data);
-      return data;
+      const response = await getAllBuses(params);
+      if (response.data) {
+        setBuses(response.data);
+        setPagination(response.pagination);
+      } else {
+        setBuses(response);
+      }
+      return response;
     } catch (err) {
       setError(err);
       console.error("Error fetching buses:", err);
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchBuses();
   }, []);
 
   return {
     buses,
+    pagination,
     setBuses,
     loading,
     error,

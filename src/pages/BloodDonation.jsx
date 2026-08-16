@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
@@ -10,10 +11,12 @@ import {
   Heart,
   ChevronRight,
   ImageIcon,
+  Search,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageBanner from "../components/PageBanner";
 import { useBloodCamp } from "../hooks/bloodCampHook";
+import PaginationControls from "../admin/components/ui/PaginationControls";
 
 const STATUS_META = {
   upcoming: {
@@ -143,15 +146,23 @@ function CampCard({ camp }) {
 }
 
 export default function BloodDonation() {
-  const { camps, loading, fetchCamps } = useBloodCamp();
-  const [filter, setFilter] = useState("all");
+  const { camps = [], pagination, loading, fetchCamps } = useBloodCamp();
+  const [filter, setFilter] = useState("upcoming");
+  const [search, setSearch] = useState("");
+  const [params, setParams] = useState({ page: 1, limit: 12, search: "", status: "upcoming" });
 
   useEffect(() => {
-    fetchCamps();
-  }, [fetchCamps]);
+    const timer = setTimeout(() => {
+      setParams(p => ({ ...p, search, status: filter === "all" ? "" : filter, page: 1 }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search, filter]);
 
-  const filtered =
-    filter === "all" ? camps : camps.filter((c) => c.status === filter);
+  useEffect(() => {
+    fetchCamps(params);
+  }, [params, fetchCamps]);
+
+  const filtered = camps;
 
   const totalDonors = camps.reduce((s, c) => s + (c.donors?.length ?? 0), 0);
 
@@ -171,7 +182,7 @@ export default function BloodDonation() {
           {[
             {
               label: "Total Camps",
-              value: camps.length,
+              value: pagination?.total || camps.length,
               color: "text-rose-500",
               bg: "bg-white dark:bg-slate-900",
             },
@@ -207,6 +218,17 @@ export default function BloodDonation() {
            <div>
               <h2 className="text-xl font-bold text-slate-800 dark:text-white">Active Blood Drives</h2>
               <p className="text-sm text-slate-500 dark:text-slate-400">Current and upcoming donation events in our community.</p>
+           </div>
+
+           <div className="flex-1 max-w-md w-full relative">
+             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+             <input
+               type="text"
+               placeholder="Search by camp name, location..."
+               value={search}
+               onChange={(e) => setSearch(e.target.value)}
+               className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/50 transition-colors"
+             />
            </div>
            
            <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
@@ -247,6 +269,15 @@ export default function BloodDonation() {
             {filtered.map((camp) => (
               <CampCard key={camp._id} camp={camp} />
             ))}
+          </div>
+        )}
+
+        {filtered.length > 0 && (
+          <div className="mt-8">
+            <PaginationControls
+              pagination={pagination}
+              onPageChange={(p) => setParams((prev) => ({ ...prev, page: p }))}
+            />
           </div>
         )}
         

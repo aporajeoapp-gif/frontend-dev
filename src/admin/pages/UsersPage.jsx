@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Plus,
   Pencil,
@@ -261,13 +261,20 @@ export default function UsersPage() {
   const { user } = useAuth();
   const {
     users,
+    pagination,
     addUser,
     updateUser: updateUserInList,
     removeUser,
+    refresh
   } = useUsers();
   const [modal, setModal] = useState(null); // null | { mode: "add" } | { mode: "edit", id: string }
   const [form, setForm] = useState(emptyUser);
   const [showPw, setShowPw] = useState(false);
+  const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+
+  useEffect(() => {
+    refresh(params);
+  }, [params]);
 
   const isSuperAdmin = user?.role === "super_admin";
   const isAdmin = user?.role === "admin";
@@ -470,7 +477,11 @@ export default function UsersPage() {
         <Table
           columns={columns}
           data={users}
-          searchKeys={["name", "email", "role"]}
+          serverSide={true}
+          pagination={pagination}
+          searchValue={params.search}
+          onSearch={(val) => setParams((p) => ({ ...p, search: val, page: 1 }))}
+          onPageChange={(p) => setParams((prev) => ({ ...prev, page: p }))}
           actions={
             isAuthorized
               ? (row) => {

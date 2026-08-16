@@ -15,8 +15,8 @@ export const getUser = async () => {
   return res.data;
 };
 
-export const getAllUsers = async () => {
-  const res = await axiosClient.get("/user/get-all-users");
+export const getAllUsers = async (params) => {
+  const res = await axiosClient.get("/user/get-all-users", { params });
   return res.data;
 };
 

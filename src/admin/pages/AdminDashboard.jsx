@@ -24,6 +24,19 @@ function timeSince(iso) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+function routeLabel(item = {}) {
+  if (item.busName || item.ferryName) {
+    return item.busName || item.ferryName;
+  }
+  if (Array.isArray(item.routeName) && item.routeName.filter(Boolean).length) {
+    return item.routeName.filter(Boolean).join(" → ");
+  }
+  if (typeof item.routeName === "string" && item.routeName.trim()) {
+    return item.routeName;
+  }
+  return "Unnamed route";
+}
+
 // ── sub-components ────────────────────────────────────────────────────────────
 function StatCard({ label, value, icon: Icon, color, sub }) {
   const colors = {
@@ -136,6 +149,8 @@ export default function AdminDashboard() {
   const roles = users.roles;
   const permEntries = users.permissionsByModule || [];
   const maxPerm = permEntries[0]?.count ?? 1;
+  const busList = Array.isArray(buses.list) ? buses.list : [];
+  const ferryList = Array.isArray(ferries.list) ? ferries.list : [];
 
   const fade = (i) => ({ initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 }, transition: { delay: i * 0.05 } });
 

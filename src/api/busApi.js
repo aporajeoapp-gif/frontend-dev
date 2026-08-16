@@ -5,8 +5,8 @@ export const createBus = async (data) => {
   return res.data;
 };
 
-export const getAllBuses = async () => {
-  const res = await axiosClient.get("/bus/get-all-buses");
+export const getAllBuses = async (params) => {
+  const res = await axiosClient.get("/bus/get-all-buses", { params });
   return res.data;
 };
 

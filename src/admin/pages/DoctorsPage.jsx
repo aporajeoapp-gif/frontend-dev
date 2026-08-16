@@ -7,6 +7,7 @@ import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
 import fetchUser from "../../hooks/userhook";
 import { toast } from "sonner";
 import { hasPermission } from "../../utils/rbac";
+import PaginationControls from "../components/ui/PaginationControls";
 
 // ── Shared styles ──────────────────────────────────────────────
 const inp =
@@ -160,21 +161,35 @@ function Field({ label, children }) {
 // ── Main page ──────────────────────────────────────────────────
 export default function DoctorsPage() {
   const { profile } = fetchUser();
-  const { doctors, loading } = useDoctors();
+  const { doctors, pagination, loading, refresh } = useDoctors();
   const [localDoctors, setLocalDoctors] = useState([]);
   const [modal, setModal] = useState(null); // null | "add" | "edit"
   const [form, setForm] = useState(EMPTY_FORM);
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
-const [scheduleModal, setScheduleModal] = useState(null); // { name, schedule } | null
-const openScheduleModal = (doc) => {
-  setScheduleModal({
-    name: doc.name,
-    schedule: Array.isArray(doc.schedule) ? doc.schedule : [],
-  });
-};
+  const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+  const [scheduleModal, setScheduleModal] = useState(null); // { name, schedule } | null
+  
+  const openScheduleModal = (doc) => {
+    setScheduleModal({
+      name: doc.name,
+      schedule: Array.isArray(doc.schedule) ? doc.schedule : [],
+    });
+  };
 
-const closeScheduleModal = () => setScheduleModal(null);
+  const closeScheduleModal = () => setScheduleModal(null);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setParams(p => ({ ...p, search, page: 1 }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    refresh(params);
+  }, [params]);
+
   useEffect(() => {
     if (doctors) setLocalDoctors(doctors);
   }, [doctors]);
@@ -192,13 +207,6 @@ const closeScheduleModal = () => setScheduleModal(null);
       </div>
     );
   }
-
-  // ── Filtering ──
-  const filtered = localDoctors.filter(
-    (d) =>
-      d.name.toLowerCase().includes(search.toLowerCase()) ||
-      d.specialty.toLowerCase().includes(search.toLowerCase()),
-  );
 
   // ── Modal helpers ──
  const openAdd = () => {
@@ -246,10 +254,8 @@ const closeScheduleModal = () => setScheduleModal(null);
     } else {
       const res = await updateDoctor(editId, payload);
       toast.success(res.message);
-      setLocalDoctors((prev) =>
-        prev.map((d) => ((d._id || d.id) === editId ? res.doctor : d)),
-      );
     }
+    refresh(params);
     closeModal();
   } catch (error) {
     errorAlert("Failed to save doctor", error);
@@ -262,7 +268,7 @@ const closeScheduleModal = () => setScheduleModal(null);
     const id = doc._id || doc.id;
     try {
       await deleteDoctor(id);
-      setLocalDoctors((prev) => prev.filter((d) => (d._id || d.id) !== id));
+      refresh(params);
       successAlert("Doctor deleted successfully");
     } catch (error) {
       errorAlert("Failed to delete doctor", error);
@@ -277,7 +283,7 @@ const closeScheduleModal = () => setScheduleModal(null);
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Doctors</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            {localDoctors.length} registered
+            {pagination?.total || localDoctors.length} registered
           </p>
         </div>
         {canCreate && (
@@ -318,14 +324,14 @@ const closeScheduleModal = () => setScheduleModal(null);
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {filtered.length === 0 ? (
+              {localDoctors.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center text-slate-400 text-sm">
                     No doctors found.
                   </td>
                 </tr>
               ) : (
-                filtered.map((doc, i) => (
+                localDoctors.map((doc, i) => (
                   <motion.tr
                     key={doc._id || doc.id}
                     initial={{ opacity: 0, y: 6 }}
@@ -411,6 +417,11 @@ const closeScheduleModal = () => setScheduleModal(null);
           </table>
         </div>
       )}
+
+      <PaginationControls
+        pagination={pagination}
+        onPageChange={(p) => setParams((prev) => ({ ...prev, page: p }))}
+      />
 
       {/* Modal */}
       <AnimatePresence>

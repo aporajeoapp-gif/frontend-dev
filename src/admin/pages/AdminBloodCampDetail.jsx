@@ -23,6 +23,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
 import { useAuth } from "../../context/AuthContext";
+import PaginationControls from "../components/ui/PaginationControls";
 
 const inp =
   "w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-primary-400 dark:focus:border-primary-500 text-slate-800 dark:text-slate-200 placeholder-slate-400 transition-colors";
@@ -144,7 +145,8 @@ export default function AdminBloodCampDetail() {
   const [camp, setCamp] = useState(null);
   const [donors, setDonors] = useState([]);
   const [candidateSearch, setCandidateSearch] = useState("");
-  const [bloodGroupFilter, setBloodGroupFilter] = useState("all");
+  const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+  const [pagination, setPagination] = useState(null);
   const [modal, setModal] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [donorForm, setDonorForm] = useState({
@@ -156,6 +158,13 @@ export default function AdminBloodCampDetail() {
     donatedAt: new Date().toISOString().split("T")[0],
   });
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setParams(p => ({ ...p, search: candidateSearch, page: 1 }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [candidateSearch]);
+
   const loadData = useCallback(async () => {
     const campRes = await fetchCampById(id);
     if (campRes.success) {
@@ -165,11 +174,12 @@ export default function AdminBloodCampDetail() {
       navigate("/admin/blood-donation");
     }
 
-    const donorRes = await fetchDonors(id);
+    const donorRes = await fetchDonors(id, params);
     if (donorRes.success) {
-      setDonors(donorRes.data);
+      setDonors(donorRes.data?.data || donorRes.data);
+      setPagination(donorRes.data?.pagination || null);
     }
-  }, [id, fetchCampById, fetchDonors, navigate]);
+  }, [id, fetchCampById, fetchDonors, navigate, params]);
 
   useEffect(() => {
     loadData();
@@ -250,7 +260,7 @@ export default function AdminBloodCampDetail() {
   };
 
   const handleExport = async () => {
-    if (!camp || visibleDonors.length === 0) return;
+    if (!camp || donors.length === 0) return;
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -319,7 +329,7 @@ export default function AdminBloodCampDetail() {
 
     doc.setFontSize(10);
     doc.setTextColor(225, 29, 72); // rose-600
-    doc.text(`${visibleDonors.length}`, 25, 60);
+    doc.text(`${donors.length}`, 25, 60);
     doc.text(`${camp.targetUnits}`, pageWidth / 2, 60, { align: "center" });
     doc.text(`${camp.collectedUnits} UNITS`, pageWidth - 25, 60, { align: "right" });
 
@@ -359,7 +369,7 @@ export default function AdminBloodCampDetail() {
     ]);
 
     const tableColumn = ["#", "DONOR NAME", "FATHER'S NAME", "BLOOD GROUP", "AGE", "PHONE", "STATUS"];
-    const tableRows = visibleDonors.map((d, i) => [
+    const tableRows = donors.map((d, i) => [
       i + 1,
       d.name.toUpperCase(),
       (d.fatherName || "—").toUpperCase(),
@@ -424,14 +434,6 @@ export default function AdminBloodCampDetail() {
   }
 
   if (!camp) return null;
-
-  const visibleDonors = donors
-    .filter((donor) =>
-      String(donor.name || "")
-        .toLowerCase()
-        .includes(candidateSearch.toLowerCase().trim()),
-    )
-    .filter((donor) => bloodGroupFilter === "all" || donor.bloodGroup === bloodGroupFilter);
 
   return (
     <div className="space-y-5">
@@ -529,7 +531,7 @@ export default function AdminBloodCampDetail() {
             <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <h2 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Users size={18} className="text-primary-500" />
-                Donors List ({visibleDonors.length})
+                Donors List ({pagination?.total || donors.length})
               </h2>
               <button 
                 onClick={handleExport}
@@ -548,18 +550,6 @@ export default function AdminBloodCampDetail() {
                   className="w-full pl-8 pr-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg border border-transparent focus:border-primary-400 outline-none"
                 />
               </div>
-              <select
-                value={bloodGroupFilter}
-                onChange={(e) => setBloodGroupFilter(e.target.value)}
-                className="px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg border border-transparent focus:border-primary-400 outline-none"
-              >
-                <option value="all">All Blood Groups</option>
-                {BLOOD_GROUPS.map((group) => (
-                  <option key={group} value={group}>
-                    {group}
-                  </option>
-                ))}
-              </select>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -589,7 +579,7 @@ export default function AdminBloodCampDetail() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {visibleDonors.length === 0 ? (
+                  {donors.length === 0 ? (
                     <tr>
                       <td
                         colSpan="5"
@@ -599,7 +589,7 @@ export default function AdminBloodCampDetail() {
                       </td>
                     </tr>
                   ) : (
-                    visibleDonors.map((donor) => (
+                    donors.map((donor) => (
                       <tr
                         key={donor._id}
                         className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
@@ -670,6 +660,10 @@ export default function AdminBloodCampDetail() {
               </table>
             </div>
           </div>
+          <PaginationControls
+            pagination={pagination}
+            onPageChange={(p) => setParams((prev) => ({ ...prev, page: p }))}
+          />
         </div>
       </div>
 

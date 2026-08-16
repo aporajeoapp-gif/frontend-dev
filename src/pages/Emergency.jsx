@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle, Phone, Shield, HeartPulse, Flame,
@@ -8,6 +8,7 @@ import {
 import PageBanner from "../components/PageBanner";
 import { useTranslation } from "../context/LanguageContext";
 import useEmergencyServices from "../hooks/emergencyHook";
+import PaginationControls from "../admin/components/ui/PaginationControls";
 
 // ── category config — matches your actual data categories ────────────────────
 const CATEGORY_META = {
@@ -64,31 +65,35 @@ const defaultMeta = {
 
 export default function Emergency() {
   const { t } = useTranslation();
-  const { emergencies = [] } = useEmergencyServices();
+  const { emergencies = [], pagination, refresh } = useEmergencyServices();
   const [view, setView] = useState("table");
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("");
+  const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setParams(p => ({ ...p, search, page: 1 }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    refresh(params);
+  }, [params]);
 
   const categories = [...new Set(emergencies.map((c) => c.category))];
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    return emergencies.filter((c) => {
-      const phones = Array.isArray(c.contactPhone) ? c.contactPhone.join(" ") : (c.contactPhone ?? "");
-      const matchSearch =
-        c.serviceName.toLowerCase().includes(q) ||
-        (c.address ?? "").toLowerCase().includes(q) ||
-        phones.includes(q);
-      const matchCat = !catFilter || c.category === catFilter;
-      return matchSearch && matchCat;
-    });
-  }, [emergencies, search, catFilter]);
+    if (!catFilter) return emergencies;
+    return emergencies.filter((c) => c.category === catFilter);
+  }, [emergencies, catFilter]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
       <PageBanner
         title="Emergency Services"
-        subtitle="Call now — Available 24/7 for your safety"
+        subtitle={`${pagination?.total || filtered.length} services available 24/7 for your safety`}
         image="https://images.unsplash.com/photo-1587745416684-47953f16f02f?w=1400&auto=format&fit=crop&q=80"
         gradient="from-rose-900/85 via-red-900/75 to-slate-900/80"
         Icon={AlertTriangle}
@@ -318,6 +323,13 @@ export default function Emergency() {
           )}
 
         </AnimatePresence>
+
+        <div className="mt-8">
+          <PaginationControls
+            pagination={pagination}
+            onPageChange={(p) => setParams((prev) => ({ ...prev, page: p }))}
+          />
+        </div>
       </div>
     </div>
   );
