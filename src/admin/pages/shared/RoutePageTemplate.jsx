@@ -399,19 +399,6 @@ export default function RoutePageTemplate({
       return;
     }
 
-    if (!isBusRoute) {
-      const hasValidTiming = form.timings.some(
-        (timing) => timing.departure && timing.arrival,
-      );
-      if (!hasValidTiming) {
-        errorAlert("Please add at least one complete schedule timing");
-        return;
-      }
-    } else if (!form.departureStopageTime && !form.arrivalStopageTime) {
-      errorAlert("Please add at least one bus stopage time");
-      return;
-    }
-
     const payload = buildPayload();
 
     try {
