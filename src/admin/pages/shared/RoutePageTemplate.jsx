@@ -4,6 +4,7 @@ import Table from "../../components/ui/Table";
 import PaginationControls from "../../components/ui/PaginationControls";
 import { confirmDelete, errorAlert, successAlert } from "../../../utils/alert";
 import { toast } from "sonner";
+import { formatTime12Hour } from "../../../utils/time";
 
 const inputClass =
 "w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-primary-400 dark:focus:border-primary-500 text-slate-800 dark:text-slate-200 placeholder-slate-400 transition-colors";
@@ -71,18 +72,7 @@ const emptyForm = {
 };
 
 const normalizeTimeInput = (value) => {
-  if (!value) return "";
-  const text = String(value).trim();
-  const [timePart, modifierRaw] = text.split(/\s+/);
-  const [hours = "", minutes = ""] = String(timePart || "").split(":");
-  if (!hours || !minutes) return text;
-
-  let normalizedHours = Number(hours);
-  const modifier = modifierRaw?.toUpperCase();
-  if (modifier === "PM" && normalizedHours !== 12) normalizedHours += 12;
-  if (modifier === "AM" && normalizedHours === 12) normalizedHours = 0;
-
-  return `${String(normalizedHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  return formatTime12Hour(value);
 };
 
 const normalizeIntermediateStops = (stops) => {
@@ -128,10 +118,10 @@ const ferryColumns = [
       return (
         <div className="flex items-center gap-1.5 text-xs">
           <span className="text-primary-600 dark:text-primary-400 font-semibold">
-            {firstTiming.departure || "N/A"}
+            {formatTime12Hour(firstTiming.departure) || "N/A"}
           </span>
           <span className="text-slate-300">|</span>
-          <span className="text-slate-500">{firstTiming.arrival || "N/A"}</span>
+          <span className="text-slate-500">{formatTime12Hour(firstTiming.arrival) || "N/A"}</span>
         </div>
       );
     },
@@ -163,12 +153,12 @@ const busColumns = [
   {
     key: "departureStopageTime",
     label: "Departure Stopage",
-    render: (value, row) => value || row.timings?.[0]?.departure || "N/A",
+    render: (value, row) => formatTime12Hour(value || row.timings?.[0]?.departure) || "N/A",
   },
   {
     key: "arrivalStopageTime",
     label: "Arrival Stopage",
-    render: (value, row) => value || row.timings?.[0]?.arrival || "N/A",
+    render: (value, row) => formatTime12Hour(value || row.timings?.[0]?.arrival) || "N/A",
   },
   {
     key: "intermediateStops",
@@ -182,7 +172,7 @@ const busColumns = [
               className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
             >
               {stop.stopName}
-              {stop.time ? ` · ${stop.time}` : ""}
+              {stop.time ? ` · ${formatTime12Hour(stop.time)}` : ""}
             </span>
           ))
         ) : (
@@ -576,7 +566,8 @@ export default function RoutePageTemplate({
                 <Field label="Departure Stopage Time">
                   <input
                     className={inputClass}
-                    type="time"
+                    type="text"
+                    placeholder="e.g. 8:30 AM"
                     value={form.departureStopageTime || ""}
                     onChange={(e) =>
                       setForm({ ...form, departureStopageTime: e.target.value })
@@ -586,7 +577,8 @@ export default function RoutePageTemplate({
                 <Field label="Arrival Stopage Time">
                   <input
                     className={inputClass}
-                    type="time"
+                    type="text"
+                    placeholder="e.g. 5:45 PM"
                     value={form.arrivalStopageTime || ""}
                     onChange={(e) =>
                       setForm({ ...form, arrivalStopageTime: e.target.value })
@@ -628,7 +620,8 @@ export default function RoutePageTemplate({
                       <Field label="Time">
                         <input
                           className={inputClass}
-                          type="time"
+                          type="text"
+                          placeholder="e.g. 10:15 AM"
                           value={stop.time || ""}
                           onChange={(e) =>
                             updateIntermediateStop(index, "time", e.target.value)
@@ -686,7 +679,8 @@ export default function RoutePageTemplate({
                           </span>
                           <input
                             className={inputClass}
-                            type="time"
+                            type="text"
+                            placeholder="e.g. 10:15 AM"
                             value={timing.departure}
                             onChange={(e) =>
                               handleTimingChange(index, "departure", e.target.value)

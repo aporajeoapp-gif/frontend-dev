@@ -94,6 +94,7 @@ export default function EmergencyPage() {
 
     const payload = {
       ...form,
+      address: form.address?.trim() || null,
       contactPhone: form.contactPhone.split(",").map((p) => p.trim()).filter(Boolean),
       location:
         form.location.lat && form.location.lng
@@ -243,7 +244,7 @@ export default function EmergencyPage() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">Address</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">Address <span className="text-slate-400">(optional)</span></label>
                 <input className={inp} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="123 Main St, Kolkata" />
               </div>
               <div className="space-y-1.5">
@@ -271,3 +272,4 @@ export default function EmergencyPage() {
     </div>
   );
 }
+

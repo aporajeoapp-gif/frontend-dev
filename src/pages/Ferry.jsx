@@ -8,6 +8,7 @@ import PageBanner from "../components/PageBanner";
 import { useTranslation } from "../context/LanguageContext";
 import useFerries from "../hooks/ferryhook";
 import PaginationControls from "../admin/components/ui/PaginationControls";
+import { formatTime12Hour } from "../utils/time";
 
 function parseTime(timeStr) {
   if (!timeStr) return null;
@@ -169,13 +170,13 @@ export default function Ferry() {
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                               <Clock size={12} className="text-cyan-500" />
-                              {timing?.departure ?? "—"}
+                              {formatTime12Hour(timing?.departure) || "—"}
                             </div>
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                               <Clock size={12} className="text-blue-500" />
-                              {timing?.arrival ?? "—"}
+                              {formatTime12Hour(timing?.arrival) || "—"}
                             </div>
                           </td>
                           <td className="px-4 py-3">
@@ -253,8 +254,8 @@ export default function Ferry() {
                       {timing && (
                         <div className="grid grid-cols-3 gap-2 mb-4">
                           {[
-                            { label: "Departure", val: timing.departure, color: "text-cyan-500" },
-                            { label: "Arrival", val: timing.arrival, color: "text-blue-500" },
+                            { label: "Departure", val: formatTime12Hour(timing.departure), color: "text-cyan-500" },
+                            { label: "Arrival", val: formatTime12Hour(timing.arrival), color: "text-blue-500" },
                             { label: "Duration", val: getDuration(timing.departure, timing.arrival), color: "text-slate-400" },
                           ].map(({ label, val, color }) => (
                             <div key={label} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-2.5 text-center">

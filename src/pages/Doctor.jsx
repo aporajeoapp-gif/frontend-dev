@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Stethoscope, MapPin, Phone, Mail, Award,
+  Stethoscope, MapPin, Phone, Mail,
   Search, PhoneCall, CalendarCheck, X, Clock, Building,
-  SlidersHorizontal, ChevronDown,
+  SlidersHorizontal, ChevronDown, Eye,
 } from "lucide-react";
 import PageBanner from "../components/PageBanner";
 import useDoctors from "../hooks/doctorhook";
@@ -64,6 +64,11 @@ function BookingModal({ doctor, onClose }) {
           </div>
           <h3 className="text-lg font-bold text-slate-800 dark:text-white">{doctor.name}</h3>
           <p className="text-sm font-medium text-primary-600 dark:text-primary-400 mt-0.5">{doctor.specialty}</p>
+          {(doctor.degree || doctor.experience != null) && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              {[doctor.degree, doctor.experience != null ? `${doctor.experience} yrs experience` : ""].filter(Boolean).join(" | ")}
+            </p>
+          )}
         </div>
 
         {/* schedule */}
@@ -117,6 +122,76 @@ function BookingModal({ doctor, onClose }) {
   );
 }
 
+function DetailsModal({ doctor, onClose }) {
+  if (!doctor) return null;
+
+  const rows = [
+    ["Full Name", doctor.name],
+    ["Specialty", doctor.specialty],
+    ["Degree", doctor.degree || "N/A"],
+    ["Experience", doctor.experience != null ? `${doctor.experience} years` : "N/A"],
+    ["Hospital / Location", doctor.location || "N/A"],
+    ["Medical Shop Location", doctor.medicalShopLocation?.address || "N/A"],
+    ["Phone", doctor.phone || "N/A"],
+    ["Alternate Phone", doctor.alternatePhone || "N/A"],
+    ["Personal Number", doctor.personalNo || "N/A"],
+    ["Email", doctor.email || "N/A"],
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 16 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+      >
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+          <div>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white">{doctor.name}</h3>
+            <p className="text-sm font-medium text-primary-600 dark:text-primary-400">{doctor.specialty}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="p-5 max-h-[75vh] overflow-y-auto space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {rows.map(([label, value]) => (
+              <div key={label} className="rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 p-3">
+                <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</p>
+                <p className="mt-1 text-sm text-slate-700 dark:text-slate-200 break-words">{value}</p>
+              </div>
+            ))}
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Weekly Schedule</p>
+            {doctor.schedule?.length > 0 ? (
+              <div className="space-y-2">
+                {doctor.schedule.map((slot, index) => (
+                  <div key={index} className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-200">
+                    <span>{slot.day || "N/A"}</span>
+                    <span>{slot.time || "N/A"}</span>
+                    <span>{slot.chamber || "N/A"}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400 dark:text-slate-500">No schedule available.</p>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
 // ── main page ─────────────────────────────────────────────────────────────────
 
 export default function Doctor() {
@@ -125,6 +200,7 @@ export default function Doctor() {
   const [search, setSearch]       = useState("");
   const [specialty, setSpecialty] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [detailsDoctor, setDetailsDoctor] = useState(null);
   const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
 
   useEffect(() => {
@@ -224,6 +300,7 @@ export default function Doctor() {
                       <th className="px-5 py-3 text-left">Specialty</th>
                       <th className="px-5 py-3 text-left">Location</th>
                       <th className="px-5 py-3 text-left">Personal No</th>
+                      <th className="px-5 py-3 text-left">Alternate No</th>
                       <th className="px-5 py-3 text-left">Actions</th>
                     </tr>
                   </thead>
@@ -244,6 +321,7 @@ export default function Doctor() {
                             </div>
                             <div>
                               <p className="font-semibold text-slate-800 dark:text-white">{doc.name}</p>
+                              {(doc.degree || doc.experience != null) && <p className="text-[11px] text-slate-500">{[doc.degree, doc.experience != null ? `${doc.experience} yrs` : ""].filter(Boolean).join(" | ")}</p>}
                               <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
                                 <Mail size={9} /> {doc.email}
                               </p>
@@ -271,10 +349,23 @@ export default function Doctor() {
                             {doc.personalNo || "—"}
                           </span>
                         </td>
+                        <td className="px-5 py-3">
+                          <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+                             <Phone size={12} className="text-slate-400 shrink-0" />
+                            {doc.alternatePhone || "—"}
+                          </span>
+                        </td>
 
                         {/* actions */}
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => setDetailsDoctor(doc)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                              title="View details"
+                            >
+                              <Eye size={10} /> Details
+                            </button>
                             <a
                               href={`tel:${doc.phone}`}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
@@ -308,6 +399,15 @@ export default function Doctor() {
 
       {/* booking modal */}
       <AnimatePresence>
+        {detailsDoctor && (
+          <DetailsModal
+            doctor={detailsDoctor}
+            onClose={() => setDetailsDoctor(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {selectedDoctor && (
           <BookingModal
             doctor={selectedDoctor}
@@ -318,3 +418,6 @@ export default function Doctor() {
     </div>
   );
 }
+
+
+

@@ -15,6 +15,7 @@ import {
 import PageBanner from "../components/PageBanner";
 import useBuses from "../hooks/bushook";
 import PaginationControls from "../admin/components/ui/PaginationControls";
+import { formatTime12Hour } from "../utils/time";
 
 function parseTime(timeStr) {
   if (!timeStr) return null;
@@ -232,13 +233,13 @@ export default function Bus() {
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                               <Clock size={12} className="text-emerald-500" />
-                              {departure}
+                              {formatTime12Hour(departure)}
                             </div>
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                               <Clock size={12} className="text-teal-500" />
-                              {arrival}
+                              {formatTime12Hour(arrival)}
                             </div>
                           </td>
                           <td className="px-4 py-3">
@@ -260,7 +261,7 @@ export default function Bus() {
                                     className="text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full"
                                   >
                                     {stop.stopName}
-                                    {stop.time ? ` · ${stop.time}` : ""}
+                                    {stop.time ? ` · ${formatTime12Hour(stop.time)}` : ""}
                                   </span>
                                 ))
                               ) : (
@@ -333,8 +334,8 @@ export default function Bus() {
 
                       <div className="grid grid-cols-3 gap-2 mb-4">
                         {[
-                          { label: "Departure", value: departure, color: "text-emerald-500" },
-                          { label: "Arrival", value: arrival, color: "text-teal-500" },
+                          { label: "Departure", value: formatTime12Hour(departure), color: "text-emerald-500" },
+                          { label: "Arrival", value: formatTime12Hour(arrival), color: "text-teal-500" },
                           { label: "Duration", value: getDuration(departure, arrival), color: "text-slate-400" },
                         ].map((item) => (
                           <div key={item.label} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-2.5 text-center">
@@ -373,7 +374,7 @@ export default function Bus() {
                                 className="text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-medium"
                               >
                                 {stop.stopName}
-                                {stop.time ? ` · ${stop.time}` : ""}
+                                {stop.time ? ` · ${formatTime12Hour(stop.time)}` : ""}
                               </span>
                             ))
                           ) : (

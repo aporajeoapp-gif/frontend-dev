@@ -200,10 +200,12 @@ export default function Events() {
   })}
 </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Clock size={12} className={color} />
-                        <span>{event.time}</span>
-                      </div>
+                      {event.time && (
+                        <div className="flex items-center gap-2">
+                          <Clock size={12} className={color} />
+                          <span>{event.time}</span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2">
                         <MapPin size={12} className={color} />
                         <span>{event.location}</span>
@@ -231,3 +233,4 @@ export default function Events() {
     </div>
   );
 }
+

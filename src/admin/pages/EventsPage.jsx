@@ -153,11 +153,13 @@ const { profile } = fetchUser();
   const handleSave = async () => {
     if (!form.title || !form.date) return;
 
+    const payload = { ...form, time: form.time?.trim() || "" };
+
     let res;
     if (modal === "add") {
-      res = await createEvent(form);
+      res = await createEvent(payload);
     } else {
-      res = await updateEvent(form._id, form);
+      res = await updateEvent(form._id, payload);
     }
 
     if (res.success) {
@@ -263,8 +265,12 @@ const { profile } = fetchUser();
     year: "numeric",
   })}
 </span>
-                  <Clock size={11} className="ml-1" />
-                  <span>{ev.time}</span>
+                  {ev.time && (
+                    <>
+                      <Clock size={11} className="ml-1" />
+                      <span>{ev.time}</span>
+                    </>
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                   <MapPin size={11} />
@@ -332,7 +338,7 @@ const { profile } = fetchUser();
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
               />
             </Field>
-            <Field label="Time">
+            <Field label={<>Time <span className="text-slate-400">(optional)</span></>}>
               <input
                 className={inp}
                 type="text"
@@ -408,3 +414,4 @@ const { profile } = fetchUser();
     </div>
   );
 }
+
