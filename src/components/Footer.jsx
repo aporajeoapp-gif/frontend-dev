@@ -31,8 +31,16 @@ const QUICK_LINKS = [
 
 const SOCIAL = [
   {
-    name: "Facebook",
-    url: "#",
+    name: "Facebook Page",
+    url: "https://www.facebook.com/share/1C9XqWZFLJ/",
+    cls: "hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600",
+    svg: (
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    ),
+  },
+  {
+    name: "Facebook Group",
+    url: "https://www.facebook.com/share/g/1Bi9WewwRq/",
     cls: "hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600",
     svg: (
       <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
@@ -69,11 +77,30 @@ const SOCIAL = [
   },
 ];
 
-const PHONE = "+91 98765 43210";
-const WHATSAPP_NUM = "919876543210";
+const PHONE = "+91 8158959774";
+const WHATSAPP_GROUP_URL =
+  "https://chat.whatsapp.com/CD10BGVveHo4INZBkdq6UX?s=cl&p=a&mlu=4&ilr=4";
+const CALL_CONTACTS = [
+  { name: "Jayita Bera", phone: "+91 96090 81193" },
+  { name: "Sunanda Khatua", phone: "+91 96090 11176" },
+  { name: "Suchismita Ghosh", phone: "+91 87774 56747" },
+];
 
 /* ── FAB rendered via portal so it's never trapped in a stacking context ── */
 function FAB({ open, onToggle, items }) {
+  const [expandedItem, setExpandedItem] = useState(null);
+  const pinTransition = {
+    type: "spring",
+    stiffness: 260,
+    damping: 24,
+    mass: 0.75,
+  };
+
+  const closeFab = () => {
+    setExpandedItem(null);
+    onToggle();
+  };
+
   const fab = (
     <>
       <AnimatePresence>
@@ -83,7 +110,7 @@ function FAB({ open, onToggle, items }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onToggle}
+            onClick={closeFab}
             style={{
               position: "fixed",
               inset: 0,
@@ -103,8 +130,9 @@ function FAB({ open, onToggle, items }) {
           zIndex: 999,
           display: "flex",
           flexDirection: "column",
-          alignItems: "flex-end",
+          alignItems: "center",
           gap: 12,
+          width: 156,
         }}
       >
         <AnimatePresence>
@@ -112,43 +140,164 @@ function FAB({ open, onToggle, items }) {
             items.map((item, i) => (
               <motion.div
                 key={item.label}
-                initial={{ opacity: 0, y: 30, scale: 0.6 }}
+                layout
+                initial={{ opacity: 0, y: 18, scale: 0.85 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 30, scale: 0.6 }}
+                exit={{ opacity: 0, y: 12, scale: 0.9 }}
                 transition={{
-                  type: "spring",
-                  stiffness: 320,
-                  damping: 22,
+                  ...pinTransition,
                   delay: i * 0.07,
                 }}
                 style={{
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
-                  gap: 4,
+                  gap: 8,
+                  width: "100%",
                 }}
               >
-                <a
-                  href={item.href}
-                  onClick={onToggle}
-                  target={item.href?.startsWith("https") ? "_blank" : undefined}
-                  rel="noopener noreferrer"
-                  style={{
-                    width: 52,
-                    height: 62,
-                    clipPath:
-                      "path('M26 0 C40.36 0 52 11.64 52 26 C52 40.36 33 56 26 62 C19 56 0 40.36 0 26 C0 11.64 11.64 0 26 0Z')",
-                    background: item.color,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    paddingBottom: 10,
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
-                    cursor: "pointer",
-                  }}
-                >
-                  <item.icon size={22} color="#fff" strokeWidth={2.2} />
-                </a>
+                <AnimatePresence>
+                  {item.children && expandedItem === item.label && (
+                    <motion.div
+                      key={`${item.label}-children`}
+                      layout
+                      initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                      transition={{
+                        opacity: { duration: 0.18 },
+                        y: pinTransition,
+                        scale: pinTransition,
+                      }}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 14,
+                        overflow: "visible",
+                        width: "100%",
+                      }}
+                    >
+                      {item.children.map((child, childIndex) => (
+                        <motion.div
+                          key={child.label}
+                          layout
+                          initial={{ opacity: 0, y: 12, scale: 0.92 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 8, scale: 0.94 }}
+                          transition={{
+                            ...pinTransition,
+                            delay: childIndex * 0.04,
+                          }}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 6,
+                            width: "100%",
+                          }}
+                        >
+                          <motion.a
+                            href={child.href}
+                            onClick={closeFab}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.94 }}
+                            transition={pinTransition}
+                            style={{
+                              width: 52,
+                              height: 62,
+                              clipPath:
+                                "path('M26 0 C40.36 0 52 11.64 52 26 C52 40.36 33 56 26 62 C19 56 0 40.36 0 26 C0 11.64 11.64 0 26 0Z')",
+                              background: child.color,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              paddingBottom: 10,
+                              boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <child.icon
+                              size={22}
+                              color="#fff"
+                              strokeWidth={2.2}
+                            />
+                          </motion.a>
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 700,
+                              color: "#fff",
+                              textShadow: "0 1px 4px rgba(0,0,0,0.5)",
+                              whiteSpace: "nowrap",
+                              textAlign: "center",
+                              width: "100%",
+                            }}
+                          >
+                            {child.label}
+                          </span>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {item.children ? (
+                  <motion.button
+                    type="button"
+                    onClick={() =>
+                      setExpandedItem((current) =>
+                        current === item.label ? null : item.label,
+                      )
+                    }
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.94 }}
+                    transition={pinTransition}
+                    style={{
+                      width: 52,
+                      height: 62,
+                      clipPath:
+                        "path('M26 0 C40.36 0 52 11.64 52 26 C52 40.36 33 56 26 62 C19 56 0 40.36 0 26 C0 11.64 11.64 0 26 0Z')",
+                      background: item.color,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingBottom: 10,
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
+                      cursor: "pointer",
+                      border: "none",
+                    }}
+                  >
+                    <item.icon size={22} color="#fff" strokeWidth={2.2} />
+                  </motion.button>
+                ) : (
+                  <motion.a
+                    href={item.href}
+                    onClick={closeFab}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.94 }}
+                    transition={pinTransition}
+                    target={
+                      item.href?.startsWith("https") ? "_blank" : undefined
+                    }
+                    rel="noopener noreferrer"
+                    style={{
+                      width: 52,
+                      height: 62,
+                      clipPath:
+                        "path('M26 0 C40.36 0 52 11.64 52 26 C52 40.36 33 56 26 62 C19 56 0 40.36 0 26 C0 11.64 11.64 0 26 0Z')",
+                      background: item.color,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingBottom: 10,
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <item.icon size={22} color="#fff" strokeWidth={2.2} />
+                  </motion.a>
+                )}
                 <span
                   style={{
                     fontSize: 10,
@@ -156,6 +305,8 @@ function FAB({ open, onToggle, items }) {
                     color: "#fff",
                     textShadow: "0 1px 4px rgba(0,0,0,0.5)",
                     whiteSpace: "nowrap",
+                    textAlign: "center",
+                    width: "100%",
                   }}
                 >
                   {item.label}
@@ -166,8 +317,11 @@ function FAB({ open, onToggle, items }) {
 
         {/* Toggle button */}
         <motion.button
-          onClick={onToggle}
+          onClick={closeFab}
+          whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.92 }}
+          animate={{ rotate: open ? 0 : 0 }}
+          transition={pinTransition}
           style={{
             width: 58,
             height: 70,
@@ -206,13 +360,18 @@ export default function Footer() {
 
   const fabItems = [
     {
-      href: `tel:${PHONE.replace(/\s/g, "")}`,
       icon: Phone,
       color: "linear-gradient(135deg,#3b82f6,#1d4ed8)",
       label: "Call",
+      children: CALL_CONTACTS.map(({ name, phone }) => ({
+        href: `tel:${phone.replace(/\s/g, "")}`,
+        icon: Phone,
+        color: "linear-gradient(135deg,#3b82f6,#1d4ed8)",
+        label: name,
+      })),
     },
     {
-      href: `https://wa.me/${WHATSAPP_NUM}`,
+      href: WHATSAPP_GROUP_URL,
       icon: MessageCircle,
       color: "linear-gradient(135deg,#22c55e,#15803d)",
       label: "WhatsApp",
@@ -281,9 +440,9 @@ export default function Footer() {
                     />
                   </span>
                   <span>
-                    42, MG Road, Bengaluru,
+                    Shyampur, Howrah,
                     <br />
-                    Karnataka 560001, India
+                    West Bengal - 711314
                   </span>
                 </div>
                 <a
@@ -296,7 +455,7 @@ export default function Footer() {
                       className="text-primary-500 dark:text-primary-400"
                     />
                   </span>
-                  info@oporajeo.in
+                  info@oporajeo.com
                 </a>
                 <a
                   href={`tel:${PHONE.replace(/\s/g, "")}`}
@@ -324,6 +483,8 @@ export default function Footer() {
                     key={name}
                     href={url}
                     title={name}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className={`w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 ${cls} flex items-center justify-center text-slate-500 dark:text-slate-400 transition-all border border-slate-200 dark:border-slate-700`}
                   >
                     <svg

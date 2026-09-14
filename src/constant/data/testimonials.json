@@ -1,56 +1,92 @@
 [
   {
     "id": "1",
-    "name": "Ananya Das",
-    "role": "Community Member",
-    "image": "👩",
+    "name": "Sujit Sen",
+    "role": "Community Supporter",
+    "image": "👨",
     "rating": 5,
     "accent": "from-indigo-400 to-violet-500",
-    "text": "This platform has made it so easy to find doctors and emergency services. It's very user-friendly and reliable."
+    "text": "A truly inspiring initiative. Keep up the amazing work!"
   },
   {
     "id": "2",
-    "name": "Rahul Sharma",
-    "role": "Daily Commuter",
+    "name": "Rahul Pakhira",
+    "role": "Community Supporter",
     "image": "👨",
     "rating": 5,
     "accent": "from-emerald-400 to-teal-500",
-    "text": "The bus and ferry schedules are always accurate. I can plan my daily travel without any confusion."
+    "text": "Your dedication and efforts are making a real difference. Proud of you all."
   },
   {
     "id": "3",
-    "name": "Dr. Priya Mehta",
-    "role": "Healthcare Professional",
-    "image": "👩‍⚕️",
+    "name": "Chetan Birla",
+    "role": "Community Supporter",
+    "image": "👨",
     "rating": 5,
     "accent": "from-rose-400 to-pink-500",
-    "text": "As a doctor, I appreciate how efficiently this platform connects patients with healthcare providers."
+    "text": "What a wonderful initiative! Your work is genuinely touching hearts."
   },
   {
     "id": "4",
-    "name": "Amit Verma",
-    "role": "Event Organizer",
-    "image": "👨‍💼",
+    "name": "Suraj Biswas",
+    "role": "Community Supporter",
+    "image": "👨",
     "rating": 5,
     "accent": "from-violet-400 to-purple-500",
-    "text": "The events feature helps us reach a wider audience. It's great for community engagement."
+    "text": "A great example of how a small team can create a big impact."
   },
   {
     "id": "5",
-    "name": "Sneha Kapoor",
-    "role": "Student",
+    "name": "Santi Gopal Rana",
+    "role": "Community Supporter",
     "image": "👩",
-    "rating": 4,
+    "rating": 5,
     "accent": "from-amber-400 to-orange-500",
-    "text": "Very helpful app! I especially like the emergency contacts and transport updates."
+    "text": "Absolutely loved seeing the work of Aparajeyo. Truly inspiring."
   },
   {
     "id": "6",
-    "name": "Rohit Singh",
-    "role": "Working Professional",
-    "image": "👨",
+    "name": "Jayita Mukharjee",
+    "role": "Community Supporter",
+    "image": "👩",
     "rating": 5,
     "accent": "from-cyan-400 to-blue-500",
-    "text": "Everything is available in one place—transport, healthcare, and events. Saves a lot of time."
+    "text": "Your commitment to helping people is truly admirable. Keep going."
+  },
+  {
+    "id": "7",
+    "name": "Jharna Thakur",
+    "role": "Community Supporter",
+    "image": "👩",
+    "rating": 5,
+    "accent": "from-fuchsia-400 to-pink-500",
+    "text": "This is more than just good work. It’s a beautiful example of humanity."
+  },
+  {
+    "id": "8",
+    "name": "Sk Anisur Rahaman",
+    "role": "Community Supporter",
+    "image": "👨",
+    "rating": 5,
+    "accent": "from-sky-400 to-indigo-500",
+    "text": "So happy to see such meaningful work being done with so much heart."
+  },
+  {
+    "id": "9",
+    "name": "Dr. Suman Pakhira",
+    "role": "Community Supporter",
+    "image": "👨‍⚕️",
+    "rating": 5,
+    "accent": "from-teal-400 to-emerald-500",
+    "text": "Aparajeyo is setting a beautiful example of compassion, unity, and service."
+  },
+  {
+    "id": "10",
+    "name": "Mamata Banerjee",
+    "role": "Community Supporter",
+    "image": "👩",
+    "rating": 5,
+    "accent": "from-orange-400 to-red-500",
+    "text": "Keep spreading hope and kindness. Your work is making people believe in humanity."
   }
 ]

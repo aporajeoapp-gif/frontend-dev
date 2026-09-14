@@ -616,7 +616,7 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a
-                  href="https://wa.me/8801712345678"
+                  href="https://chat.whatsapp.com/CD10BGVveHo4INZBkdq6UX?s=cl&p=a&mlu=4&ilr=4"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95"

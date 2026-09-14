@@ -12,6 +12,9 @@
     "test:run": "vitest --run"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
     "@tailwindcss/vite": "^4.2.2",
     "axios": "^1.13.6",
     "framer-motion": "^12.38.0",
