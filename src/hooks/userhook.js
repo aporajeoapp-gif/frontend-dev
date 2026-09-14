@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getUser, getAllUsers } from "../api/authApi";
 
 export default function fetchUser() {
@@ -29,13 +29,27 @@ export function useUsers() {
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const loadUsers = async (params = {}) => {
+  const loadUsers = useCallback(async (params = {}) => {
     try {
       setLoading(true);
       const response = await getAllUsers(params);
       if (response.data) {
         setUsers(response.data);
-        setPagination(response.pagination);
+        setPagination({
+          ...(response.pagination || {}),
+          total:
+            response.pagination?.total ??
+            response.totalUsers ??
+            response.total ??
+            response.count ??
+            response.data.length,
+        });
+      } else if (response.users) {
+        setUsers(response.users);
+        setPagination({
+          ...(response.pagination || {}),
+          total: response.totalUsers ?? response.total ?? response.users.length,
+        });
       } else {
         setUsers(response);
       }
@@ -44,7 +58,7 @@ export function useUsers() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
   
   const addUser = (user) => setUsers((prev) => [user, ...prev]);
 

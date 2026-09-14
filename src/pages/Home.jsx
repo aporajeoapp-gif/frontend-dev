@@ -31,6 +31,7 @@ import useEmergencyServices from "../hooks/emergencyHook";
 import useBuses from "../hooks/bushook";
 import useFerries from "../hooks/ferryhook";
 import { useEvents } from "../hooks/eventHook";
+import { useUsers } from "../hooks/userhook";
 
 const SLIDES = [
   {
@@ -120,19 +121,64 @@ const WHY_US = [
   },
 ];
 
+const getTotalCount = (items, pagination) => {
+  if (typeof pagination?.total === "number") return pagination.total;
+  if (typeof pagination?.totalDocs === "number") return pagination.totalDocs;
+  if (typeof pagination?.totalItems === "number") return pagination.totalItems;
+  if (typeof pagination?.totalCount === "number") return pagination.totalCount;
+  if (typeof pagination?.count === "number") return pagination.count;
+  if (typeof items?.total === "number") return items.total;
+  if (typeof items?.totalUsers === "number") return items.totalUsers;
+  if (typeof items?.count === "number") return items.count;
+  return Array.isArray(items) ? items.length : 0;
+};
+
 export default function Home() {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const slide = SLIDES[current];
-  const { doctors } = useDoctors();
-  const { emergencies } = useEmergencyServices();
-  const { buses } = useBuses();
-  const { ferries } = useFerries();
+  const {
+    doctors,
+    pagination: doctorsPagination,
+    refresh: refreshDoctors,
+  } = useDoctors();
+  const {
+    emergencies,
+    pagination: emergenciesPagination,
+    refresh: refreshEmergencies,
+  } = useEmergencyServices();
+  const { buses, pagination: busesPagination, refresh: refreshBuses } = useBuses();
+  const {
+    ferries,
+    pagination: ferriesPagination,
+    refresh: refreshFerries,
+  } = useFerries();
   const { events, fetchEvents } = useEvents();
+  const { users, pagination: usersPagination, refresh: refreshUsers } = useUsers();
 
   useEffect(() => {
+    refreshDoctors();
+    refreshEmergencies();
+    refreshBuses();
+    refreshFerries();
+    refreshUsers();
     fetchEvents();
-  }, [fetchEvents]);
+  }, [
+    fetchEvents,
+    refreshBuses,
+    refreshDoctors,
+    refreshEmergencies,
+    refreshFerries,
+    refreshUsers,
+  ]);
+
+  const doctorCount = getTotalCount(doctors, doctorsPagination);
+  const emergencyCount = getTotalCount(emergencies, emergenciesPagination);
+  const busCount = getTotalCount(buses, busesPagination);
+  const ferryCount = getTotalCount(ferries, ferriesPagination);
+  const transportCount = busCount + ferryCount;
+  const eventCount = getTotalCount(events);
+  const communityCount = getTotalCount(users, usersPagination);
 
   const SERVICES = [
     {
@@ -143,7 +189,7 @@ export default function Home() {
       to: "to-violet-600",
       shadow: "shadow-primary-200 dark:shadow-primary-900/40",
       desc: "Verified specialists across all fields",
-      count: `${doctors.length}+ Doctors`,
+      count: `${doctorCount} Doctors`,
     },
     {
       path: "/emergency",
@@ -153,7 +199,7 @@ export default function Home() {
       to: "to-red-600",
       shadow: "shadow-rose-200 dark:shadow-rose-900/40",
       desc: "24/7 emergency contacts & services",
-      count: `${emergencies.length}+ Services`,
+      count: `${emergencyCount} Services`,
     },
     {
       path: "/bus",
@@ -163,7 +209,7 @@ export default function Home() {
       to: "to-teal-600",
       shadow: "shadow-emerald-200 dark:shadow-emerald-900/40",
       desc: "Live bus routes and schedules",
-      count: `${buses.length}+ Routes`,
+      count: `${busCount} Routes`,
     },
     {
       path: "/ferry",
@@ -173,7 +219,7 @@ export default function Home() {
       to: "to-blue-600",
       shadow: "shadow-cyan-200 dark:shadow-cyan-900/40",
       desc: "Ferry timetables and fares",
-      count: `${ferries.length}+ Routes`,
+      count: `${ferryCount} Routes`,
     },
     {
       path: "/events",
@@ -183,7 +229,7 @@ export default function Home() {
       to: "to-purple-600",
       shadow: "shadow-violet-200 dark:shadow-violet-900/40",
       desc: "Community events near you",
-      count: `${events.length}+ Events`,
+      count: `${eventCount} Events`,
     },
   ];
   useEffect(() => {
@@ -224,28 +270,7 @@ export default function Home() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Grid overlay */}
-        {/* <div className="absolute inset-0 pointer-events-none opacity-[0.04]">
-          <svg width="100%" height="100%">
-            <defs>
-              <pattern
-                id="hg"
-                width="48"
-                height="48"
-                patternUnits="userSpaceOnUse"
-              >
-                <path
-                  d="M 48 0 L 0 0 0 48"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="0.8"
-                />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#hg)" />
-          </svg>
-        </div> */}
-
+       
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center py-24">
           <AnimatePresence mode="wait">
             <motion.div
@@ -354,28 +379,28 @@ export default function Home() {
         <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             {
-              count: doctors.length,
+              count: doctorCount,
               label: "Verified Doctors",
               Icon: Stethoscope,
               from: "from-primary-500",
               to: "to-violet-600",
             },
             {
-              count: emergencies.length,
+              count: emergencyCount,
               label: "Emergency Services",
               Icon: AlertTriangle,
               from: "from-rose-500",
               to: "to-red-600",
             },
             {
-              count: buses.length + ferries.length,
+              count: transportCount,
               label: "Transport Routes",
               Icon: Bus,
               from: "from-emerald-500",
               to: "to-teal-600",
             },
             {
-              count: "10K",
+              count: communityCount,
               label: "Community Members",
               Icon: Users,
               from: "from-violet-500",
@@ -399,7 +424,7 @@ export default function Home() {
                 <Icon size={18} className="text-white" />
               </div>
               <div className="text-2xl font-extrabold text-slate-800 dark:text-white">
-                {count}+
+                {count}
               </div>
               <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                 {label}
@@ -528,62 +553,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ── */}
-      {/* <section className="py-16 px-4 bg-slate-50 dark:bg-slate-950">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-widest mb-3 bg-violet-50 dark:bg-violet-900/30 px-3 py-1.5 rounded-full">
-              <Star size={10} /> Testimonials
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-800 dark:text-white">
-              What People Say
-            </h2>
-          </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {testimonials.map((item, i) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, scale: 0.92 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.07 }}
-                whileHover={{ y: -4 }}
-                className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all relative overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 w-16 h-16 bg-violet-50 dark:bg-violet-900/20 rounded-full translate-x-6 -translate-y-6" />
-                <div className="flex gap-0.5 mb-3">
-                  {[...Array(item.rating)].map((_, j) => (
-                    <Star
-                      key={j}
-                      size={12}
-                      className="text-amber-400 fill-amber-400"
-                    />
-                  ))}
-                </div>
-                <p className="text-sm text-slate-600 dark:text-slate-300 italic leading-relaxed mb-4">
-                  "{item.text}"
-                </p>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-full bg-linear-to-br from-primary-400 to-violet-500 flex items-center justify-center text-base shadow-sm">
-                    {item.image}
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-800 dark:text-white">
-                      {item.name}
-                    </p>
-                    <p className="text-xs text-slate-400">{item.role}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section> */}
+      
 
       <Testimonials />
 

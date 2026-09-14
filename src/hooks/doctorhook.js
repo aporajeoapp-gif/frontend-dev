@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { getDoctors } from "../api/doctorApi";
 
 export default function useDoctors() {
@@ -7,7 +7,7 @@ export default function useDoctors() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
 
-    const fetchDoctors = async (params = {}) => {
+    const fetchDoctors = useCallback(async (params = {}) => {
         try {
             setLoading(true)
             const response = await getDoctors(params)
@@ -23,7 +23,7 @@ export default function useDoctors() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [])
 
     return {
         doctors,

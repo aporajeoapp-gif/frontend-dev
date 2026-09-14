@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { getAllEmergencyServices } from "../api/emergencyApi";
 
@@ -8,7 +8,7 @@ export default function useEmergencyServices() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const fetchEmergencies = async (params = {}) => {
+    const fetchEmergencies = useCallback(async (params = {}) => {
         try {
             setLoading(true);
             const response = await getAllEmergencyServices(params);
@@ -26,7 +26,7 @@ export default function useEmergencyServices() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     return {
         emergencies,
