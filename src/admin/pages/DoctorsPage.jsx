@@ -5,6 +5,7 @@ import useDoctors from "../../hooks/doctorhook";
 import { createDoctor, updateDoctor, deleteDoctor } from "../../api/doctorApi";
 import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
 import fetchUser from "../../hooks/userhook";
+import useDebouncedValue from "../../hooks/useDebouncedValue";
 import { toast } from "sonner";
 import { hasPermission } from "../../utils/rbac";
 import PaginationControls from "../components/ui/PaginationControls";
@@ -41,7 +42,7 @@ function ScheduleEditor({ schedule, onChange }) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-          Schedule
+          Schedule <span className="text-slate-400">(Optional)</span>
         </label>
         <button
           type="button"
@@ -136,7 +137,7 @@ function DoctorModal({ mode, form, setForm, onSave, onClose }) {
         {/* Body */}
         <div className="px-6 py-5 max-h-[75vh] overflow-y-auto space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Full Name">
+            <Field label="Full Name" required>
               <input
                 className={inp}
                 value={form.name}
@@ -144,7 +145,7 @@ function DoctorModal({ mode, form, setForm, onSave, onClose }) {
                 placeholder="Dr. Jane Smith"
               />
             </Field>
-            <Field label="Specialty">
+            <Field label="Specialty" required>
               <input
                 className={inp}
                 value={form.specialty}
@@ -154,14 +155,14 @@ function DoctorModal({ mode, form, setForm, onSave, onClose }) {
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Degree (Optional)">
+            <Field label="Degree" optional>
               <input className={inp} value={form.degree || ""} onChange={set("degree")} placeholder="MBBS, MD" />
             </Field>
-            <Field label="Experience in Years (Optional)">
+            <Field label="Experience in Years" optional>
               <input className={inp} type="number" min="0" value={form.experience ?? ""} onChange={set("experience")} placeholder="e.g. 8" />
             </Field>
           </div>
-          <Field label="Medical Shop Location (Optional)">
+          <Field label="Medical Shop Location" optional>
             <input
               className={inp}
               value={form.medicalShopLocation?.address || ""}
@@ -175,7 +176,7 @@ function DoctorModal({ mode, form, setForm, onSave, onClose }) {
             />
           </Field>
 
-          <Field label="Hospital / Location">
+          <Field label="Hospital / Location" required>
             <input
               className={inp}
               value={form.location}
@@ -185,7 +186,7 @@ function DoctorModal({ mode, form, setForm, onSave, onClose }) {
           </Field>
 
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Phone">
+            <Field label="Phone" required>
               <input
                 className={inp}
                 value={form.phone}
@@ -193,7 +194,7 @@ function DoctorModal({ mode, form, setForm, onSave, onClose }) {
                 placeholder="+91-9876543210"
               />
             </Field>
-            <Field label="Alternate Phone No">
+            <Field label="Alternate Phone No" optional>
               <input
                 className={inp}
                 type="tel"
@@ -204,7 +205,7 @@ function DoctorModal({ mode, form, setForm, onSave, onClose }) {
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Personal Number">
+            <Field label="Personal Number" optional>
               <input
                 className={inp}
                 value={form.personalNo}
@@ -212,7 +213,7 @@ function DoctorModal({ mode, form, setForm, onSave, onClose }) {
                 placeholder="+91-XXXXXXXXXX"
               />
             </Field>
-            <Field label="Email">
+            <Field label="Email" optional>
               <input
                 className={inp}
                 type="email"
@@ -310,11 +311,21 @@ function DoctorDetailsModal({ doctor, onClose }) {
     </div>
   );
 }
-function Field({ label, children }) {
+function FieldLabel({ label, required, optional }) {
+  return (
+    <>
+      {label}
+      {required && <span className="text-red-500"> *</span>}
+      {optional && <span className="text-slate-400"> (Optional)</span>}
+    </>
+  );
+}
+
+function Field({ label, required = false, optional = false, children }) {
   return (
     <div className="space-y-1.5">
       <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-        {label}
+        <FieldLabel label={label} required={required} optional={optional} />
       </label>
       {children}
     </div>
@@ -333,6 +344,7 @@ export default function DoctorsPage() {
   const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
   const [scheduleModal, setScheduleModal] = useState(null); // { name, schedule } | null
   const [detailsModal, setDetailsModal] = useState(null);
+  const debouncedSearch = useDebouncedValue(search);
 
   const openScheduleModal = (doc) => {
     setScheduleModal({
@@ -345,11 +357,8 @@ export default function DoctorsPage() {
   const closeDetailsModal = () => setDetailsModal(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setParams((p) => ({ ...p, search, page: 1 }));
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search]);
+    setParams((p) => ({ ...p, search: debouncedSearch, page: 1 }));
+  }, [debouncedSearch]);
 
   useEffect(() => {
     refresh(params);

@@ -4,15 +4,13 @@ import {
   Pencil,
   Trash2,
   ExternalLink,
-  ToggleLeft,
-  ToggleRight,
   X,
   Upload,
   Image as ImageIcon,
 } from "lucide-react";
-import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useAds } from "../../hooks/adsHook";
+import useDebouncedValue from "../../hooks/useDebouncedValue";
 import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
 import fetchUser from "../../hooks/userhook";
 import { hasPermission } from "../../utils/rbac";
@@ -29,10 +27,18 @@ const btn = (v = "primary") =>
     ghost:
       "inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors",
   })[v];
-const Field = ({ label, children }) => (
+const FieldLabel = ({ label, required, optional }) => (
+  <>
+    {label}
+    {required && <span className="text-red-500"> *</span>}
+    {optional && <span className="text-slate-400"> (Optional)</span>}
+  </>
+);
+
+const Field = ({ label, required = false, optional = false, children }) => (
   <div className="space-y-1.5">
     <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-      {label}
+      <FieldLabel label={label} required={required} optional={optional} />
     </label>
     {children}
   </div>
@@ -79,7 +85,7 @@ const empty = {
   image: null,
   link: "",
   cta: "Learn More",
-  status: "active",
+  status: "pending",
   startDate: "",
   endDate: "",
 };
@@ -95,6 +101,30 @@ const formatDateForInput = (d) => {
   }
 };
 
+const getDateKey = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+};
+
+const resolveAdStatus = (startDate, endDate) => {
+  const start = getDateKey(startDate);
+  const end = getDateKey(endDate);
+  const today = getDateKey(new Date());
+
+  if (!start || !end) return "pending";
+  if (today < start) return "pending";
+  if (today > end) return "expired";
+  return "active";
+};
+
+const isAdDateExpired = (endDate) => {
+  const end = getDateKey(endDate);
+  const today = getDateKey(new Date());
+  return Boolean(end && today > end);
+};
+
 export default function AdsPage() {
   const { ads, pagination, loading, fetchAds, createAd, updateAd, deleteAd } = useAds();
   const [modal, setModal] = useState(null);
@@ -103,18 +133,11 @@ export default function AdsPage() {
   const { profile } = fetchUser();
   const [search, setSearch] = useState("");
   const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
-
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setParams(p => ({ ...p, search, page: 1 }));
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search]);
+  const debouncedSearch = useDebouncedValue(search);
 
   useEffect(() => {
-    fetchAds(params);
-  }, [fetchAds, params]);
+    fetchAds({ ...params, search: debouncedSearch });
+  }, [fetchAds, params, debouncedSearch]);
 
   const openAdd = () => {
     setForm(empty);
@@ -122,14 +145,29 @@ export default function AdsPage() {
     setModal("add");
   };
   const openEdit = (a) => {
+    const startDate = formatDateForInput(a.startDate);
+    const endDate = formatDateForInput(a.endDate);
     setForm({ 
       ...a, 
       image: null,
-      startDate: formatDateForInput(a.startDate),
-      endDate: formatDateForInput(a.endDate)
+      startDate,
+      endDate,
+      status: isAdDateExpired(endDate)
+        ? "expired"
+        : a.status || resolveAdStatus(startDate, endDate),
     });
     setPreview(a.image);
     setModal("edit");
+  };
+
+  const updateDateField = (field, value) => {
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      return {
+        ...next,
+        status: isAdDateExpired(next.endDate) ? "expired" : next.status,
+      };
+    });
   };
 
   const handleFileChange = (e) => {
@@ -143,11 +181,16 @@ export default function AdsPage() {
   const handleSave = async () => {
     if (!form.title || !form.startDate || !form.endDate) return;
 
+    const payload = {
+      ...form,
+      status: isAdDateExpired(form.endDate) ? "expired" : form.status,
+    };
+
     let res;
     if (modal === "add") {
-      res = await createAd(form);
+      res = await createAd(payload);
     } else {
-      res = await updateAd(form._id, form);
+      res = await updateAd(form._id, payload);
     }
 
     if (res.success) {
@@ -168,12 +211,6 @@ export default function AdsPage() {
     } else {
       errorAlert(res.message);
     }
-  };
-
-  const toggleActive = async (ad) => {
-    const newStatus = ad.status === "active" ? "expired" : "active";
-    const res = await updateAd(ad._id, { status: newStatus });
-    if (!res.success) errorAlert(res.message);
   };
 
   const canCreate = hasPermission(profile, "ads.create");
@@ -211,7 +248,10 @@ export default function AdsPage() {
       <div className="flex items-center gap-4">
         <input
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setParams((prev) => ({ ...prev, page: 1 }));
+          }}
           placeholder="Search ads..."
           className="w-full max-w-xs px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg border border-transparent focus:border-primary-400 outline-none text-slate-700 dark:text-slate-300 placeholder-slate-400 transition-colors"
         />
@@ -219,12 +259,9 @@ export default function AdsPage() {
       </div>
 
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {ads.map((ad, i) => (
-          <motion.div
+        {ads.map((ad) => (
+          <div
             key={ad._id}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.04 }}
             className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow"
           >
             <div className="relative h-36 bg-slate-200 dark:bg-slate-800 overflow-hidden">
@@ -245,17 +282,6 @@ export default function AdsPage() {
                   {ad.tag}
                 </span>
               </div>
-              {/* <div className="absolute top-2 right-2">
-                {canUpdate && (
-                  <button onClick={() => toggleActive(ad)} className="text-white">
-                    {ad.status === "active" ? (
-                      <ToggleRight size={20} className="text-emerald-400" />
-                    ) : (
-                      <ToggleLeft size={20} className="text-slate-400" />
-                    )}
-                  </button>
-                )}
-              </div> */}
             </div>
             <div className="p-4">
               <div className="flex items-start justify-between gap-2">
@@ -303,7 +329,7 @@ export default function AdsPage() {
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
 
@@ -318,7 +344,7 @@ export default function AdsPage() {
         title={modal === "add" ? "Add Advertisement" : "Edit Advertisement"}
       >
         <div className="space-y-4">
-          <Field label="Title">
+          <Field label="Title" required>
             <input
               className={inp}
               value={form.title}
@@ -326,7 +352,7 @@ export default function AdsPage() {
               placeholder="Hospital Promotion"
             />
           </Field>
-          <Field label="Description">
+          <Field label="Description" optional>
             <textarea
               className={inp + " resize-none"}
               rows={3}
@@ -338,7 +364,7 @@ export default function AdsPage() {
             />
           </Field>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Tag">
+            <Field label="Tag" optional>
               <select
                 className={inp}
                 value={form.tag}
@@ -349,7 +375,7 @@ export default function AdsPage() {
                 ))}
               </select>
             </Field>
-            <Field label="CTA Text">
+            <Field label="CTA Text" optional>
               <input
                 className={inp}
                 value={form.cta}
@@ -358,7 +384,7 @@ export default function AdsPage() {
               />
             </Field>
           </div>
-          <Field label="Ad Image">
+          <Field label="Ad Image" optional>
             <label className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors overflow-hidden">
               {preview ? (
                 <img src={preview} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
@@ -371,7 +397,7 @@ export default function AdsPage() {
               <input type="file" className="hidden" onChange={handleFileChange} accept="image/*" />
             </label>
           </Field>
-          <Field label="Redirect Link (Optional)">
+          <Field label="Redirect Link" optional>
             <input
               className={inp}
               value={form.link}
@@ -380,30 +406,29 @@ export default function AdsPage() {
             />
           </Field>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Start Date">
+            <Field label="Start Date" required>
               <input
                 className={inp}
                 type="date"
                 value={form.startDate}
-                onChange={(e) =>
-                  setForm({ ...form, startDate: e.target.value })
-                }
+                onChange={(e) => updateDateField("startDate", e.target.value)}
               />
             </Field>
-            <Field label="End Date">
+            <Field label="End Date" required>
               <input
                 className={inp}
                 type="date"
                 value={form.endDate}
-                onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+                onChange={(e) => updateDateField("endDate", e.target.value)}
               />
             </Field>
           </div>
-          <Field label="Status">
+          <Field label="Status" required>
             <select
-              className={inp}
-              value={form.status}
+              className={isAdDateExpired(form.endDate) ? `${inp} cursor-not-allowed opacity-80` : inp}
+              value={isAdDateExpired(form.endDate) ? "expired" : form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value })}
+              disabled={isAdDateExpired(form.endDate)}
             >
               <option value="active">Active</option>
               <option value="expired">Expired</option>

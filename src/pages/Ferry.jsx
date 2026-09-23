@@ -7,6 +7,7 @@ import {
 import PageBanner from "../components/PageBanner";
 import { useTranslation } from "../context/LanguageContext";
 import useFerries from "../hooks/ferryhook";
+import useDebouncedValue from "../hooks/useDebouncedValue";
 import PaginationControls from "../admin/components/ui/PaginationControls";
 import { formatTime12Hour } from "../utils/time";
 
@@ -40,13 +41,11 @@ export default function Ferry() {
   const [search, setSearch] = useState("");
   const [routeFilter, setRouteFilter] = useState("");
   const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+  const debouncedSearch = useDebouncedValue(search);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setParams(p => ({ ...p, search, page: 1 }));
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search]);
+    setParams(p => ({ ...p, search: debouncedSearch, page: 1 }));
+  }, [debouncedSearch]);
 
   useEffect(() => {
     refresh(params);
@@ -185,7 +184,9 @@ export default function Ferry() {
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                              <span className="font-bold text-cyan-600 dark:text-cyan-400">₹{s.fare}</span>
+                              <span className="font-bold text-cyan-600 dark:text-cyan-400">
+                                {s.fare === null || s.fare === undefined ? "N/A" : `₹${s.fare}`}
+                              </span>
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex flex-wrap gap-1">
@@ -270,7 +271,9 @@ export default function Ferry() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-1.5">
                           <Banknote size={13} className="text-cyan-500" />
-                          <span className="font-bold text-cyan-600 dark:text-cyan-400 text-lg">₹{s.fare}</span>
+                          <span className="font-bold text-cyan-600 dark:text-cyan-400 text-lg">
+                            {s.fare === null || s.fare === undefined ? "N/A" : `₹${s.fare}`}
+                          </span>
                         </div>
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-full">
                           <CheckCircle size={10} /> Active

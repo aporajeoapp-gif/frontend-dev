@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import PageBanner from "../components/PageBanner";
 import useDoctors from "../hooks/doctorhook";
+import useDebouncedValue from "../hooks/useDebouncedValue";
 import PaginationControls from "../admin/components/ui/PaginationControls";
 
 // ── specialty badge ───────────────────────────────────────────────────────────
@@ -202,13 +203,11 @@ export default function Doctor() {
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [detailsDoctor, setDetailsDoctor] = useState(null);
   const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+  const debouncedSearch = useDebouncedValue(search);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setParams(p => ({ ...p, search, page: 1 }));
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search]);
+    setParams(p => ({ ...p, search: debouncedSearch, page: 1 }));
+  }, [debouncedSearch]);
 
   useEffect(() => {
     refresh(params);

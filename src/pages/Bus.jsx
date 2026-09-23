@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import PageBanner from "../components/PageBanner";
 import useBuses from "../hooks/bushook";
+import useDebouncedValue from "../hooks/useDebouncedValue";
 import PaginationControls from "../admin/components/ui/PaginationControls";
 import { formatTime12Hour } from "../utils/time";
 
@@ -72,14 +73,11 @@ export default function Bus() {
   const [search, setSearch] = useState("");
   const [routeFilter, setRouteFilter] = useState("");
   const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+  const debouncedSearch = useDebouncedValue(search, 400);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setParams((current) => ({ ...current, search, page: 1 }));
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [search]);
+    setParams((current) => ({ ...current, search: debouncedSearch, page: 1 }));
+  }, [debouncedSearch]);
 
   useEffect(() => {
     refresh(params);
@@ -249,7 +247,7 @@ export default function Bus() {
                           </td>
                           <td className="px-4 py-3">
                             <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                              Rs. {bus.fare}
+                              {bus.fare === null || bus.fare === undefined ? "N/A" : `Rs. ${bus.fare}`}
                             </span>
                           </td>
                           <td className="px-4 py-3">
@@ -354,7 +352,7 @@ export default function Bus() {
                         <div className="flex items-center gap-1.5">
                           <Banknote size={13} className="text-emerald-500" />
                           <span className="font-bold text-emerald-600 dark:text-emerald-400 text-lg">
-                            Rs. {bus.fare}
+                            {bus.fare === null || bus.fare === undefined ? "N/A" : `Rs. ${bus.fare}`}
                           </span>
                         </div>
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-full">

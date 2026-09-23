@@ -17,6 +17,7 @@ import PageBanner from "../components/PageBanner";
 import PaginationControls from "../admin/components/ui/PaginationControls";
 import { useTranslation } from "../context/LanguageContext";
 import { useEvents } from "../hooks/eventHook";
+import useDebouncedValue from "../hooks/useDebouncedValue";
 
 const CATEGORY_META = {
   Health: {
@@ -53,15 +54,13 @@ export default function Events() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+  const debouncedSearch = useDebouncedValue(search);
 
   const categories = Object.keys(CATEGORY_META);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setParams(p => ({ ...p, search, category, page: 1 }));
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search, category]);
+    setParams(p => ({ ...p, search: debouncedSearch, category, page: 1 }));
+  }, [debouncedSearch, category]);
 
   useEffect(() => {
     fetchEvents(params);

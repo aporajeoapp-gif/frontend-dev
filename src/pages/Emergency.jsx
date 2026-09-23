@@ -8,6 +8,7 @@ import {
 import PageBanner from "../components/PageBanner";
 import { useTranslation } from "../context/LanguageContext";
 import useEmergencyServices from "../hooks/emergencyHook";
+import useDebouncedValue from "../hooks/useDebouncedValue";
 import PaginationControls from "../admin/components/ui/PaginationControls";
 
 // ── category config — matches your actual data categories ────────────────────
@@ -70,13 +71,11 @@ export default function Emergency() {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("");
   const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+  const debouncedSearch = useDebouncedValue(search);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setParams(p => ({ ...p, search, page: 1 }));
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search]);
+    setParams(p => ({ ...p, search: debouncedSearch, page: 1 }));
+  }, [debouncedSearch]);
 
   useEffect(() => {
     refresh(params);

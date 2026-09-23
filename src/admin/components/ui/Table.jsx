@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import useDebouncedValue from "../../../hooks/useDebouncedValue";
 
 export default function Table({
   columns,
@@ -14,18 +15,23 @@ export default function Table({
   searchValue = "",
   showPagination = true,
 }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(searchValue);
   const [clientPage, setClientPage] = useState(1);
 
-  const activeQuery = serverSide ? searchValue : query;
+  const activeQuery = query;
+  const debouncedQuery = useDebouncedValue(query);
   const activePage = serverSide && pagination ? pagination.page : clientPage;
+
+  useEffect(() => {
+    if (serverSide && onSearch && debouncedQuery !== searchValue) {
+      onSearch(debouncedQuery);
+    }
+  }, [debouncedQuery, onSearch, searchValue, serverSide]);
 
   const handleSearch = (e) => {
     const val = e.target.value;
-    if (serverSide && onSearch) {
-      onSearch(val);
-    } else {
-      setQuery(val);
+    setQuery(val);
+    if (!serverSide) {
       setClientPage(1);
     }
   };

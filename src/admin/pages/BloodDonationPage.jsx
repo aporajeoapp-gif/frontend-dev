@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useBloodCamp } from "../../hooks/bloodCampHook";
+import useDebouncedValue from "../../hooks/useDebouncedValue";
 import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
 import fetchUser from "../../hooks/userhook";
 import { hasPermission } from "../../utils/rbac";
@@ -31,10 +32,18 @@ const btn = (v = "primary") =>
       "inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors",
   })[v];
 
-const Field = ({ label, children }) => (
+const FieldLabel = ({ label, required, optional }) => (
+  <>
+    {label}
+    {required && <span className="text-red-500"> *</span>}
+    {optional && <span className="text-slate-400"> (Optional)</span>}
+  </>
+);
+
+const Field = ({ label, required = false, optional = false, children }) => (
   <div className="space-y-1.5">
     <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-      {label}
+      <FieldLabel label={label} required={required} optional={optional} />
     </label>
     {children}
   </div>
@@ -162,7 +171,7 @@ function CampForm({ value, onChange }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Banner Image">
+        <Field label="Banner Image" optional>
           <label className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors overflow-hidden">
             {preview ? (
               <img
@@ -180,7 +189,7 @@ function CampForm({ value, onChange }) {
           </label>
         </Field>
 
-        <Field label="Organization Logo">
+        <Field label="Organization Logo" optional>
           <label className="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors overflow-hidden">
             {value.organizationLogo && typeof value.organizationLogo !== 'string' ? (
               <img src={URL.createObjectURL(value.organizationLogo)} alt="Logo" className="absolute inset-0 w-full h-full object-contain p-2" />
@@ -198,7 +207,7 @@ function CampForm({ value, onChange }) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Camp Name">
+        <Field label="Camp Name" required>
           <input
             className={inp}
             value={value.campName}
@@ -206,7 +215,7 @@ function CampForm({ value, onChange }) {
             placeholder="Life Saver Blood Camp"
           />
         </Field>
-        <Field label="Organizer">
+        <Field label="Organizer" required>
           <input
             className={inp}
             value={value.organizer}
@@ -216,7 +225,7 @@ function CampForm({ value, onChange }) {
         </Field>
       </div>
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Date">
+        <Field label="Date" required>
           <input
             className={inp}
             type="date"
@@ -224,7 +233,7 @@ function CampForm({ value, onChange }) {
             onChange={(e) => onChange({ ...value, date: e.target.value })}
           />
         </Field>
-        <Field label="Time">
+        <Field label="Time" required>
           <input
             className={inp}
             value={value.time}
@@ -234,7 +243,7 @@ function CampForm({ value, onChange }) {
         </Field>
       </div>
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Location / Venue">
+        <Field label="Location / Venue" required>
           <input
             className={inp}
             value={value.location}
@@ -242,7 +251,7 @@ function CampForm({ value, onChange }) {
             placeholder="Town Hall"
           />
         </Field>
-        <Field label="City">
+        <Field label="City" required>
           <input
             className={inp}
             value={value.city}
@@ -251,7 +260,7 @@ function CampForm({ value, onChange }) {
           />
         </Field>
       </div>
-      <Field label="Full Address">
+      <Field label="Full Address" required>
         <input
           className={inp}
           value={value.address}
@@ -260,7 +269,7 @@ function CampForm({ value, onChange }) {
         />
       </Field>
       <div className="grid grid-cols-2 gap-4">
-        <Field label="Contact Phone">
+        <Field label="Contact Phone" required>
           <input
             className={inp}
             value={value.contactPhone}
@@ -270,7 +279,7 @@ function CampForm({ value, onChange }) {
             placeholder="+91-9800000001"
           />
         </Field>
-        <Field label="Contact Email">
+        <Field label="Contact Email" required>
           <input
             className={inp}
             type="email"
@@ -283,7 +292,7 @@ function CampForm({ value, onChange }) {
         </Field>
       </div>
       <div className="grid grid-cols-3 gap-4">
-        <Field label="Target Units">
+        <Field label="Target Units" required>
           <input
             className={inp}
             type="number"
@@ -294,7 +303,7 @@ function CampForm({ value, onChange }) {
             placeholder="200"
           />
         </Field>
-        <Field label="Collected Units">
+        <Field label="Collected Units" required>
           <input
             className={inp}
             type="number"
@@ -306,7 +315,7 @@ function CampForm({ value, onChange }) {
           />
         </Field>
         {value.status !== 'completed' ? (
-          <Field label="Status">
+          <Field label="Status" required>
             <select
               value={value.status}
               onChange={(e) => onChange({ ...value, status: e.target.value })}
@@ -320,20 +329,20 @@ function CampForm({ value, onChange }) {
             </select>
           </Field>
         ) : (
-          <Field label="Status">
+          <Field label="Status" required>
              <div className="w-full px-3 py-2 text-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 font-bold">
                 Completed
              </div>
           </Field>
         )}
       </div>
-      <Field label="Blood Groups Needed">
+      <Field label="Blood Groups Needed" required>
         <BloodGroupToggle
           selected={value.bloodGroupsNeeded}
           onChange={(v) => onChange({ ...value, bloodGroupsNeeded: v })}
         />
       </Field>
-      <Field label="Description">
+      <Field label="Description" optional>
         <textarea
           value={value.description}
           onChange={(e) => onChange({ ...value, description: e.target.value })}
@@ -354,14 +363,11 @@ export default function BloodDonationPage() {
   const [search, setSearch] = useState("");
   const { profile } = fetchUser();
   const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+  const debouncedSearch = useDebouncedValue(search);
 
-  // Debounce search
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setParams(p => ({ ...p, search, page: 1 }));
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search]);
+    setParams(p => ({ ...p, search: debouncedSearch, page: 1 }));
+  }, [debouncedSearch]);
 
   useEffect(() => {
     fetchCamps(params);

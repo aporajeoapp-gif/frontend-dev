@@ -19,10 +19,18 @@ const buttonClass = (variant = "primary") =>
       "inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors",
   })[variant];
 
-const Field = ({ label, children }) => (
+const FieldLabel = ({ label, required, optional }) => (
+  <>
+    {label}
+    {required && <span className="text-red-500"> *</span>}
+    {optional && <span className="text-slate-400"> (Optional)</span>}
+  </>
+);
+
+const Field = ({ label, required = false, optional = false, children }) => (
   <div className="space-y-1.5">
     <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-      {label}
+      <FieldLabel label={label} required={required} optional={optional} />
     </label>
     {children}
   </div>
@@ -88,7 +96,8 @@ const normalizeIntermediateStops = (stops) => {
     .filter((stop) => stop.stopName);
 };
 
-const formatCurrency = (value) => `Rs. ${value ?? 0}`;
+const formatCurrency = (value) =>
+  value === null || value === undefined || value === "" ? "N/A" : `Rs. ${value}`;
 
 const ferryColumns = [
   {
@@ -359,7 +368,9 @@ export default function RoutePageTemplate({
     return {
       ...form,
       routeName: cleanedRouteName,
-      fare: Number(form.fare),
+      fare: form.fare === "" || form.fare === null || form.fare === undefined
+        ? null
+        : Number(form.fare),
       stops: cleanedStops,
       timings: isBusRoute
         ? [
@@ -460,12 +471,13 @@ export default function RoutePageTemplate({
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 overflow-hidden">
-        {loading ? (
-          <div className="flex justify-center py-10">
-            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary-600" />
+      <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 overflow-hidden">
+        {loading && (
+          <div className="absolute right-5 top-5 z-10 flex items-center gap-2 rounded-lg bg-white/90 dark:bg-slate-900/90 px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700">
+            <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+            Loading
           </div>
-        ) : (
+        )}
           <Table
             columns={tableColumns}
             data={routes}
@@ -490,7 +502,6 @@ export default function RoutePageTemplate({
               </div>
             )}
           />
-        )}
 
         {!loading && pagination?.totalPages > 1 && (
           <PaginationControls
@@ -507,7 +518,7 @@ export default function RoutePageTemplate({
       >
         <div className="space-y-5 pb-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label={isBusRoute ? "Bus Name" : "Ferry Name"}>
+            <Field label={isBusRoute ? "Bus Name" : "Ferry Name"} optional>
               <input
                 className={inputClass}
                 value={isBusRoute ? form.busName : form.ferryName}
@@ -522,7 +533,7 @@ export default function RoutePageTemplate({
             </Field>
 
             {!isBusRoute && (
-              <Field label="Route Number">
+              <Field label="Route Number" optional>
                 <input
                   className={inputClass}
                   value={form.routeNumber || ""}
@@ -534,7 +545,7 @@ export default function RoutePageTemplate({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="From (Start Point)">
+            <Field label="From (Start Point)" required>
               <input
                 className={inputClass}
                 value={form.routeName[0] || ""}
@@ -546,7 +557,7 @@ export default function RoutePageTemplate({
                 placeholder="e.g. Shyampur"
               />
             </Field>
-            <Field label="To (End Point)">
+            <Field label="To (End Point)" required>
               <input
                 className={inputClass}
                 value={form.routeName[1] || ""}
@@ -563,7 +574,7 @@ export default function RoutePageTemplate({
           {isBusRoute ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field label="Departure Stopage Time">
+                <Field label="Departure Stopage Time" required>
                   <input
                     className={inputClass}
                     type="text"
@@ -574,7 +585,7 @@ export default function RoutePageTemplate({
                     }
                   />
                 </Field>
-                <Field label="Arrival Stopage Time">
+                <Field label="Arrival Stopage Time" required>
                   <input
                     className={inputClass}
                     type="text"
@@ -590,7 +601,7 @@ export default function RoutePageTemplate({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Intermediate Stops
+                    Intermediate Stops <span className="text-slate-400 normal-case tracking-normal">(Optional)</span>
                   </label>
                   <button
                     type="button"
@@ -607,7 +618,7 @@ export default function RoutePageTemplate({
                       key={index}
                       className="grid grid-cols-1 md:grid-cols-[1fr_160px_auto] gap-3 items-end bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800"
                     >
-                      <Field label={`Stop ${index + 1}`}>
+                      <Field label={`Stop ${index + 1}`} optional>
                         <input
                           className={inputClass}
                           value={stop.stopName || ""}
@@ -617,7 +628,7 @@ export default function RoutePageTemplate({
                           placeholder="Stop name"
                         />
                       </Field>
-                      <Field label="Time">
+                      <Field label="Time" optional>
                         <input
                           className={inputClass}
                           type="text"
@@ -643,7 +654,7 @@ export default function RoutePageTemplate({
             </>
           ) : (
             <>
-              <Field label="Intermediate Stops (comma separated)">
+              <Field label="Intermediate Stops (comma separated)" optional>
                 <input
                   className={inputClass}
                   value={Array.isArray(form.stops) ? form.stops.join(", ") : form.stops}
@@ -655,7 +666,7 @@ export default function RoutePageTemplate({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Scheduled Timings
+                    Scheduled Timings <span className="text-red-500">*</span>
                   </label>
                   <button
                     type="button"
@@ -675,7 +686,7 @@ export default function RoutePageTemplate({
                       <div className="grid grid-cols-2 gap-3 flex-1">
                         <div>
                           <span className="text-[10px] font-medium text-slate-400 block mb-1">
-                            DEPARTURE
+                            DEPARTURE <span className="text-red-500">*</span>
                           </span>
                           <input
                             className={inputClass}
@@ -689,7 +700,7 @@ export default function RoutePageTemplate({
                         </div>
                         <div>
                           <span className="text-[10px] font-medium text-slate-400 block mb-1">
-                            ARRIVAL
+                            ARRIVAL <span className="text-red-500">*</span>
                           </span>
                           <input
                             className={inputClass}
@@ -717,7 +728,7 @@ export default function RoutePageTemplate({
             </>
           )}
 
-          <Field label="Fare (Rs.)">
+          <Field label="Fare (Rs.)" optional>
             <input
               className={inputClass}
               type="number"

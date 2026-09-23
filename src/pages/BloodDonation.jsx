@@ -16,6 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import PageBanner from "../components/PageBanner";
 import { useBloodCamp } from "../hooks/bloodCampHook";
+import useDebouncedValue from "../hooks/useDebouncedValue";
 import PaginationControls from "../admin/components/ui/PaginationControls";
 
 const STATUS_META = {
@@ -34,6 +35,7 @@ const STATUS_META = {
 };
 
 const FILTERS = ["all", "upcoming", "ongoing", "completed"];
+const STATUS_ORDER = { upcoming: 0, ongoing: 1, completed: 2 };
 
 function CampCard({ camp }) {
   const navigate = useNavigate();
@@ -147,22 +149,29 @@ function CampCard({ camp }) {
 
 export default function BloodDonation() {
   const { camps = [], pagination, loading, fetchCamps } = useBloodCamp();
-  const [filter, setFilter] = useState("upcoming");
+  const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [params, setParams] = useState({ page: 1, limit: 12, search: "", status: "upcoming" });
+  const [params, setParams] = useState({ page: 1, limit: 12, search: "", status: "" });
+  const debouncedSearch = useDebouncedValue(search);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setParams(p => ({ ...p, search, status: filter === "all" ? "" : filter, page: 1 }));
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search, filter]);
+    setParams(p => ({
+      ...p,
+      search: debouncedSearch,
+      status: filter === "all" ? "" : filter,
+      page: 1,
+    }));
+  }, [debouncedSearch, filter]);
 
   useEffect(() => {
     fetchCamps(params);
   }, [params, fetchCamps]);
 
-  const filtered = camps;
+  const filtered = [...camps].sort(
+    (a, b) =>
+      (STATUS_ORDER[a.status] ?? Number.MAX_SAFE_INTEGER) -
+      (STATUS_ORDER[b.status] ?? Number.MAX_SAFE_INTEGER)
+  );
 
   const totalDonors = camps.reduce((s, c) => s + (c.donors?.length ?? 0), 0);
 

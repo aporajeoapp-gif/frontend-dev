@@ -56,6 +56,14 @@ const pKey = (r, a) => `${r}.${a}`;
 const allGroups = [...new Set(RESOURCES.map((r) => r.group))];
 const TOTAL = RESOURCES.length * ACTIONS.length;
 
+const FieldLabel = ({ label, required, optional }) => (
+  <>
+    {label}
+    {required && <span className="text-red-500"> *</span>}
+    {optional && <span className="text-slate-400"> (Optional)</span>}
+  </>
+);
+
 const emptyUser = {
   name: "",
   email: "",
@@ -186,7 +194,7 @@ function PermissionMatrix({ permissions, onChange, disabled, requesterPermission
   return (
     <div className="space-y-4">
       <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-        Permissions
+        Permissions <span className="text-slate-400">(Optional)</span>
       </p>
       {allGroups.map((group) => {
         const resources = RESOURCES.filter((r) => r.group === group);
@@ -558,14 +566,14 @@ export default function UsersPage() {
                   />
                 </div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  {form.avatar ? "Click to change picture" : "Upload profile picture"}
+                  {form.avatar ? "Click to change picture" : "Upload profile picture (Optional)"}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                    Full Name
+                    <FieldLabel label="Full Name" required />
                   </label>
                   <input
                     className={inp}
@@ -576,7 +584,7 @@ export default function UsersPage() {
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                    Email
+                    <FieldLabel label="Email" required />
                   </label>
                   <input
                     className={inp}
@@ -592,7 +600,7 @@ export default function UsersPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                    Phone Number
+                    <FieldLabel label="Phone Number" optional />
                   </label>
                   <input
                     className={inp}
@@ -603,7 +611,7 @@ export default function UsersPage() {
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                    Date of Birth
+                    <FieldLabel label="Date of Birth" optional />
                   </label>
                   <input
                     className={inp}
@@ -615,7 +623,7 @@ export default function UsersPage() {
               </div>
               <div className="space-y-1.5">
                 <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                  Address
+                  <FieldLabel label="Address" optional />
                 </label>
                 <textarea
                   className={inp}
@@ -627,9 +635,11 @@ export default function UsersPage() {
               </div>
               <div className="space-y-1.5">
                 <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                  {modal.mode === "edit"
-                    ? "New Password (leave blank to keep)"
-                    : "Password"}
+                  <FieldLabel
+                    label={modal.mode === "edit" ? "New Password" : "Password"}
+                    required={modal.mode !== "edit"}
+                    optional={modal.mode === "edit"}
+                  />
                 </label>
                 <div className="relative">
                   <input
@@ -658,7 +668,7 @@ export default function UsersPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                    Role
+                    <FieldLabel label="Role" required />
                   </label>
                   <select
                     className={inp}
@@ -691,7 +701,7 @@ export default function UsersPage() {
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
-                    Status
+                    <FieldLabel label="Status" optional />
                   </label>
                   <select
                     className={inp}

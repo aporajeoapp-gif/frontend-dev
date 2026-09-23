@@ -7,6 +7,7 @@ import {
   deleteEmergencyService,
 } from "../../api/emergencyApi";
 import useEmergencyServices from "../../hooks/emergencyHook";
+import useDebouncedValue from "../../hooks/useDebouncedValue";
 import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
 import fetchUser from "../../hooks/userhook";
 import { hasPermission } from "../../utils/rbac";
@@ -26,6 +27,15 @@ const btn = (v = "primary") =>
   })[v];
 
 const CATEGORIES = ["Ambulance", "Fire", "Police", "Hospital", "Other"];
+
+const FieldLabel = ({ label, required, optional, note }) => (
+  <>
+    {label}
+    {required && <span className="text-red-500"> *</span>}
+    {optional && <span className="text-slate-400"> (Optional)</span>}
+    {note && <span className="text-slate-400"> {note}</span>}
+  </>
+);
 
 const categoryColors = {
   Ambulance: "bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300",
@@ -52,13 +62,11 @@ export default function EmergencyPage() {
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
   const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+  const debouncedSearch = useDebouncedValue(search);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setParams(p => ({ ...p, search, page: 1 }));
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search]);
+    setParams(p => ({ ...p, search: debouncedSearch, page: 1 }));
+  }, [debouncedSearch]);
 
   useEffect(() => {
     refresh(params);
@@ -233,31 +241,43 @@ export default function EmergencyPage() {
             <div className="px-6 py-5 max-h-[75vh] overflow-y-auto space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">Service Name</label>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                    <FieldLabel label="Service Name" required />
+                  </label>
                   <input className={inp} value={form.serviceName} onChange={(e) => setForm({ ...form, serviceName: e.target.value })} placeholder="City Police HQ" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">Category</label>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                    <FieldLabel label="Category" required />
+                  </label>
                   <select className={inp} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
                     {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">Address <span className="text-slate-400">(optional)</span></label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                  <FieldLabel label="Address" optional />
+                </label>
                 <input className={inp} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="123 Main St, Kolkata" />
               </div>
               <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">Contact Phones <span className="text-slate-400">(comma-separated)</span></label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                  <FieldLabel label="Contact Phones" required note="(comma-separated)" />
+                </label>
                 <input className={inp} value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} placeholder="100, 033-22143526" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">Latitude <span className="text-slate-400">(optional)</span></label>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                    <FieldLabel label="Latitude" optional />
+                  </label>
                   <input className={inp} type="number" value={form.location.lat} onChange={(e) => setForm({ ...form, location: { ...form.location, lat: e.target.value } })} placeholder="22.5726" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">Longitude <span className="text-slate-400">(optional)</span></label>
+                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400">
+                    <FieldLabel label="Longitude" optional />
+                  </label>
                   <input className={inp} type="number" value={form.location.lng} onChange={(e) => setForm({ ...form, location: { ...form.location, lng: e.target.value } })} placeholder="88.3639" />
                 </div>
               </div>

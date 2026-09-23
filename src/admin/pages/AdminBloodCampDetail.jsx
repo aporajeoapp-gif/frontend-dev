@@ -19,6 +19,7 @@ import {
   Search,
 } from "lucide-react";
 import { useBloodCamp } from "../../hooks/bloodCampHook";
+import useDebouncedValue from "../../hooks/useDebouncedValue";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { confirmDelete, successAlert, errorAlert } from "../../utils/alert";
@@ -146,6 +147,7 @@ export default function AdminBloodCampDetail() {
   const [donors, setDonors] = useState([]);
   const [candidateSearch, setCandidateSearch] = useState("");
   const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+  const debouncedCandidateSearch = useDebouncedValue(candidateSearch);
   const [pagination, setPagination] = useState(null);
   const [modal, setModal] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -159,11 +161,8 @@ export default function AdminBloodCampDetail() {
   });
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setParams(p => ({ ...p, search: candidateSearch, page: 1 }));
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [candidateSearch]);
+    setParams(p => ({ ...p, search: debouncedCandidateSearch, page: 1 }));
+  }, [debouncedCandidateSearch]);
 
   const loadData = useCallback(async () => {
     const campRes = await fetchCampById(id);
