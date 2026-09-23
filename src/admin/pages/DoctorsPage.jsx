@@ -9,6 +9,7 @@ import useDebouncedValue from "../../hooks/useDebouncedValue";
 import { toast } from "sonner";
 import { hasPermission } from "../../utils/rbac";
 import PaginationControls from "../components/ui/PaginationControls";
+import { DOCTOR_SPECIALTIES } from "../../constants/doctorSpecialties";
 // ── Shared styles ──────────────────────────────────────────────
 const inp =
   "w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-primary-400 dark:focus:border-primary-500 text-slate-800 dark:text-slate-200 placeholder-slate-400 transition-colors";
@@ -146,12 +147,18 @@ function DoctorModal({ mode, form, setForm, onSave, onClose }) {
               />
             </Field>
             <Field label="Specialty" required>
-              <input
+              <select
                 className={inp}
                 value={form.specialty}
                 onChange={set("specialty")}
-                placeholder="Cardiology"
-              />
+              >
+                <option value="">Select specialty</option>
+                {DOCTOR_SPECIALTIES.map((specialty) => (
+                  <option key={specialty} value={specialty}>
+                    {specialty}
+                  </option>
+                ))}
+              </select>
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-4">

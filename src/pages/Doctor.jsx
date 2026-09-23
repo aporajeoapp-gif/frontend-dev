@@ -9,6 +9,7 @@ import PageBanner from "../components/PageBanner";
 import useDoctors from "../hooks/doctorhook";
 import useDebouncedValue from "../hooks/useDebouncedValue";
 import PaginationControls from "../admin/components/ui/PaginationControls";
+import { DOCTOR_SPECIALTIES } from "../constants/doctorSpecialties";
 
 // ── specialty badge ───────────────────────────────────────────────────────────
 
@@ -213,8 +214,6 @@ export default function Doctor() {
     refresh(params);
   }, [params]);
 
-  const specialties = [...new Set(doctors.map((d) => d.specialty))];
-
   const filtered = useMemo(() => {
     if (!specialty) return doctors;
     return doctors.filter((d) => d.specialty === specialty);
@@ -262,7 +261,7 @@ export default function Doctor() {
               className="h-11 pl-10 pr-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/50 appearance-none transition-colors min-w-[170px]"
             >
               <option value="" className="bg-white dark:bg-slate-900">All Specialties</option>
-              {specialties.map((s) => (
+              {DOCTOR_SPECIALTIES.map((s) => (
                 <option key={s} value={s} className="bg-white dark:bg-slate-900">{s}</option>
               ))}
             </select>
