@@ -93,6 +93,7 @@ const empty = {
   status: "upcoming",
   targetUnits: "",
   collectedUnits: "0",
+  isPublished: true,
   banner: null,
   organizationLogo: null,
 };

@@ -197,34 +197,32 @@ export default function PublicBloodCampDetail() {
                   </div>
                 </div>
 
-                {camp.isPublished && (
-                  <div className="space-y-6">
-                     <h2 className="text-2xl font-black text-slate-800 dark:text-white">Demand & Impact</h2>
-                     <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                        <div className="flex justify-between items-end mb-3">
-                           <div>
-                              <p className="text-3xl font-black text-rose-600 dark:text-rose-400">{camp.collectedUnits}</p>
-                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Units Collected</p>
-                           </div>
-                           <div className="text-right">
-                              <p className="text-xl font-bold text-slate-400 dark:text-slate-600">/ {camp.targetUnits}</p>
-                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Goal</p>
-                           </div>
-                        </div>
-                        <div className="h-3 bg-white dark:bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
-                          <motion.div 
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress}%` }}
-                            transition={{ duration: 1, ease: "easeOut" }}
-                            className="h-full bg-linear-to-r from-rose-500 via-pink-500 to-rose-400 rounded-full"
-                          />
-                        </div>
-                        <p className="mt-4 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                          Help us reach our goal! Each donation can save up to 3 lives.
-                        </p>
-                     </div>
-                  </div>
-                )}
+                <div className="space-y-6">
+                   <h2 className="text-2xl font-black text-slate-800 dark:text-white">Demand & Impact</h2>
+                   <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                      <div className="flex justify-between items-end mb-3">
+                         <div>
+                            <p className="text-3xl font-black text-rose-600 dark:text-rose-400">{camp.collectedUnits}</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Units Collected</p>
+                         </div>
+                         <div className="text-right">
+                            <p className="text-xl font-bold text-slate-400 dark:text-slate-600">/ {camp.targetUnits}</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Goal</p>
+                         </div>
+                      </div>
+                      <div className="h-3 bg-white dark:bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          className="h-full bg-linear-to-r from-rose-500 via-pink-500 to-rose-400 rounded-full"
+                        />
+                      </div>
+                      <p className="mt-4 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        Help us reach our goal! Each donation can save up to 3 lives.
+                      </p>
+                   </div>
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -253,8 +251,7 @@ export default function PublicBloodCampDetail() {
             </motion.div>
 
             {/* Registered Donors Section */}
-            {camp.isPublished && (
-              <motion.div 
+            <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
@@ -357,20 +354,10 @@ export default function PublicBloodCampDetail() {
                   </div>
                 )}
               </motion.div>
-            )}
           </div>
 
           <div className="lg:col-span-4">
             <div className="sticky top-24 space-y-6">
-              {!camp.isPublished && (
-                <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 rounded-3xl p-6 mb-4">
-                  <h3 className="text-sm font-black text-amber-700 dark:text-amber-500 mb-1">Private Preview</h3>
-                  <p className="text-[10px] text-amber-600 dark:text-amber-400">
-                    This camp is in draft mode. Units collected and donor list are hidden from public.
-                  </p>
-                </div>
-              )}
-              
               <motion.div 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
