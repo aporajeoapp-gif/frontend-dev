@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, X, RefreshCw } from "lucide-react";
+import { Eye, Plus, Pencil, Trash2, X, RefreshCw } from "lucide-react";
 import Table from "../../components/ui/Table";
 import PaginationControls from "../../components/ui/PaginationControls";
 import { confirmDelete, errorAlert, successAlert } from "../../../utils/alert";
@@ -58,6 +58,91 @@ const Modal = ({ open, onClose, title, children }) => {
           </button>
         </div>
         <div className="px-6 py-5 max-h-[75vh] overflow-y-auto">{children}</div>
+      </div>
+    </div>
+  );
+};
+
+const RouteDetails = ({ route, isBusRoute }) => {
+  if (!route) return null;
+
+  const routeName = Array.isArray(route.routeName)
+    ? route.routeName.join(" -> ")
+    : route.routeName || "N/A";
+  const timings = Array.isArray(route.timings) ? route.timings : [];
+  const stops = Array.isArray(route.stops) ? route.stops.join(", ") : route.stops || "N/A";
+  const intermediateStops = Array.isArray(route.intermediateStops)
+    ? route.intermediateStops
+    : [];
+  const name = isBusRoute ? route.busName : route.ferryName;
+
+  const rows = [
+    [isBusRoute ? "Bus Name" : "Ferry Name", name || "N/A"],
+    ["Route", routeName],
+    !isBusRoute ? ["Route Number", route.routeNumber || "N/A"] : null,
+    ["Stops", stops],
+    ["Fare", formatCurrency(route.fare)],
+  ].filter(Boolean);
+
+  return (
+    <div className="space-y-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {rows.map(([label, value]) => (
+          <div
+            key={label}
+            className="rounded-lg border border-slate-200 dark:border-slate-700 p-3"
+          >
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</p>
+            <p className="mt-1 text-sm text-slate-800 dark:text-slate-200 break-words">
+              {value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {isBusRoute && (
+        <div>
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+            Intermediate Stops
+          </p>
+          {intermediateStops.length > 0 ? (
+            <div className="space-y-2">
+              {intermediateStops.map((stop, index) => (
+                <div
+                  key={`${stop.stopName}-${index}`}
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-lg border border-slate-200 dark:border-slate-700 p-3 text-sm text-slate-700 dark:text-slate-300"
+                >
+                  <span>{stop.stopName || "N/A"}</span>
+                  <span>{formatTime12Hour(stop.time) || "N/A"}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400">N/A</p>
+          )}
+        </div>
+      )}
+
+      <div>
+        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+          Scheduled Timings
+        </p>
+        {timings.length > 0 ? (
+          <div className="space-y-2">
+            {timings.map((timing, index) => (
+              <div
+                key={`${timing.departure}-${timing.arrival}-${index}`}
+                className="grid grid-cols-1 sm:grid-cols-3 gap-2 rounded-lg border border-slate-200 dark:border-slate-700 p-3 text-sm text-slate-700 dark:text-slate-300"
+              >
+                <span>#{index + 1}</span>
+                <span>{formatTime12Hour(timing.departure) || "N/A"}</span>
+                <span>{formatTime12Hour(timing.arrival) || "N/A"}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-slate-400">No timings available.</p>
+        )}
       </div>
     </div>
   );
@@ -219,6 +304,7 @@ export default function RoutePageTemplate({
   const [internalLoading, setInternalLoading] = useState(!data);
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [detailsRoute, setDetailsRoute] = useState(null);
 
   useEffect(() => {
     if (!fetchFn) return;
@@ -489,6 +575,9 @@ export default function RoutePageTemplate({
             showPagination={false}
             actions={(route) => (
               <div className="flex items-center gap-1">
+                <button className={buttonClass("ghost")} onClick={() => setDetailsRoute(route)}>
+                  <Eye size={14} />
+                </button>
                 {canUpdate && (
                   <button className={buttonClass("ghost")} onClick={() => openEdit(route)}>
                     <Pencil size={14} />
@@ -704,7 +793,8 @@ export default function RoutePageTemplate({
                           </span>
                           <input
                             className={inputClass}
-                            type="time"
+                            type="text"
+                            placeholder="e.g. 11:30 AM"
                             value={timing.arrival}
                             onChange={(e) =>
                               handleTimingChange(index, "arrival", e.target.value)
@@ -747,6 +837,14 @@ export default function RoutePageTemplate({
             Save
           </button>
         </div>
+      </Modal>
+
+      <Modal
+        open={!!detailsRoute}
+        onClose={() => setDetailsRoute(null)}
+        title={`${title} Details`}
+      >
+        <RouteDetails route={detailsRoute} isBusRoute={isBusRoute} />
       </Modal>
     </div>
   );

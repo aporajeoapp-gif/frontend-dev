@@ -9,6 +9,7 @@ import PageBanner from "../components/PageBanner";
 import { useTranslation } from "../context/LanguageContext";
 import useEmergencyServices from "../hooks/emergencyHook";
 import useDebouncedValue from "../hooks/useDebouncedValue";
+import useResponsiveListView from "../hooks/useResponsiveListView";
 import PaginationControls from "../admin/components/ui/PaginationControls";
 
 // ── category config — matches your actual data categories ────────────────────
@@ -67,7 +68,7 @@ const defaultMeta = {
 export default function Emergency() {
   const { t } = useTranslation();
   const { emergencies = [], pagination, refresh } = useEmergencyServices();
-  const [view, setView] = useState("table");
+  const [view, setView] = useResponsiveListView();
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("");
   const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
@@ -164,7 +165,7 @@ export default function Emergency() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden"
+              className="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden"
             >
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -250,13 +251,13 @@ export default function Emergency() {
           )}
 
           {/* ── CARD VIEW ── */}
-          {view === "card" && (
+          {(view === "card" || view === "table") && (
             <motion.div
               key="cards"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+              className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 ${view === "table" ? "md:hidden" : ""}`}
             >
               {filtered.map((c, i) => {
                 const { Icon, accent, badge, dot, color } = CATEGORY_META[c.category] ?? defaultMeta;

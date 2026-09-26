@@ -72,7 +72,7 @@ const Modal = ({ open, onClose, title, children }) => {
   );
 };
 
-const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const BLOOD_GROUPS = ["Not known", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 function DonorForm({ value, onChange }) {
   return (

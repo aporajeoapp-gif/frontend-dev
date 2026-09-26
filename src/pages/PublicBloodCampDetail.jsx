@@ -25,7 +25,7 @@ import { useBloodCamp } from "../hooks/bloodCampHook";
 import { successAlert, errorAlert } from "../utils/alert";
 import PageBanner from "../components/PageBanner";
 
-const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const BLOOD_GROUPS = ["Not known", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 const STATUS_META = {
   upcoming: {

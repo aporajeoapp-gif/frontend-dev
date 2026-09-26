@@ -20,7 +20,6 @@ const EMPTY_FORM = {
   specialty: "",
   location: "",
   phone: "",
-  personalNo: "",
   alternatePhone: "",
   degree: "",
   experience: "",
@@ -169,7 +168,7 @@ function DoctorModal({ mode, form, setForm, onSave, onClose }) {
               <input className={inp} type="number" min="0" value={form.experience ?? ""} onChange={set("experience")} placeholder="e.g. 8" />
             </Field>
           </div>
-          <Field label="Medical Shop Location" optional>
+          <Field label="Medical Shop Address" optional>
             <input
               className={inp}
               value={form.medicalShopLocation?.address || ""}
@@ -183,12 +182,12 @@ function DoctorModal({ mode, form, setForm, onSave, onClose }) {
             />
           </Field>
 
-          <Field label="Hospital / Location" required>
+          <Field label="Hospital / Medical Shop Name" required>
             <input
               className={inp}
               value={form.location}
               onChange={set("location")}
-              placeholder="Apollo Hospital, Kolkata"
+              placeholder="Apollo Pharmacy"
             />
           </Field>
 
@@ -212,14 +211,6 @@ function DoctorModal({ mode, form, setForm, onSave, onClose }) {
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Personal Number" optional>
-              <input
-                className={inp}
-                value={form.personalNo}
-                onChange={set("personalNo")}
-                placeholder="+91-XXXXXXXXXX"
-              />
-            </Field>
             <Field label="Email" optional>
               <input
                 className={inp}
@@ -264,11 +255,10 @@ function DoctorDetailsModal({ doctor, onClose }) {
     ["Specialty", doctor.specialty],
     ["Degree", doctor.degree || "N/A"],
     ["Experience", doctor.experience != null ? `${doctor.experience} years` : "N/A"],
-    ["Hospital / Location", doctor.location || "N/A"],
-    ["Medical Shop Location", medicalShopAddress],
+    ["Hospital / Medical Shop Name", doctor.location || "N/A"],
+    ["Medical Shop Address", medicalShopAddress],
     ["Phone", doctor.phone || "N/A"],
     ["Alternate Phone", doctor.alternatePhone || "N/A"],
-    ["Personal Number", doctor.personalNo || "N/A"],
     ["Email", doctor.email || "N/A"],
   ];
 
@@ -507,9 +497,9 @@ export default function DoctorsPage() {
                 {[
                   "Doctor",
                   "Specialty",
-                  "Location",
+                  "Medical Shop Name",
+                  "Medical Shop Address",
                   "Phone",
-                  "Personal No",
                   "Alternate Ph No",
                   "Schedule",
                   "Actions",
@@ -563,9 +553,14 @@ export default function DoctorsPage() {
                       </span>
                     </td>
 
-                    {/* Location */}
+                    {/* Medical Shop Name */}
                     <td className="px-4 py-3 max-w-[180px] truncate text-slate-500 dark:text-slate-400">
                       {doc.location || "N/A"}
+                    </td>
+
+                    {/* Medical Shop Address */}
+                    <td className="px-4 py-3 max-w-[220px] truncate text-slate-500 dark:text-slate-400">
+                      {doc.medicalShopLocation?.address || "N/A"}
                     </td>
 
                     {/* Phone */}
@@ -573,10 +568,6 @@ export default function DoctorsPage() {
                       {doc.phone || "N/A"}
                     </td>
 
-                    {/* Personal Number */}
-                    <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">
-                      {doc.personalNo || "N/A"}
-                    </td>
                     {/* Alternate Number */}
                     <td className="px-4 py-3 whitespace-nowrap text-slate-500 dark:text-slate-400">
                       {doc.alternatePhone || "N/A"}
@@ -717,5 +708,4 @@ export default function DoctorsPage() {
     </div>
   );
 }
-
 

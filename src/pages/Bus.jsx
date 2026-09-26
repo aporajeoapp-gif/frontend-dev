@@ -15,6 +15,7 @@ import {
 import PageBanner from "../components/PageBanner";
 import useBuses from "../hooks/bushook";
 import useDebouncedValue from "../hooks/useDebouncedValue";
+import useResponsiveListView from "../hooks/useResponsiveListView";
 import PaginationControls from "../admin/components/ui/PaginationControls";
 import { formatTime12Hour } from "../utils/time";
 
@@ -69,7 +70,7 @@ function getIntermediateStops(bus) {
 
 export default function Bus() {
   const { buses = [], pagination, refresh } = useBuses();
-  const [view, setView] = useState("table");
+  const [view, setView] = useResponsiveListView();
   const [search, setSearch] = useState("");
   const [routeFilter, setRouteFilter] = useState("");
   const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
@@ -176,7 +177,7 @@ export default function Bus() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden"
+              className="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden"
             >
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -288,13 +289,13 @@ export default function Bus() {
             </motion.div>
           )}
 
-          {view === "card" && (
+          {(view === "card" || view === "table") && (
             <motion.div
               key="cards"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-5"
+              className={`grid grid-cols-1 md:grid-cols-2 gap-5 ${view === "table" ? "md:hidden" : ""}`}
             >
               {filtered.map((bus, index) => {
                 const routeName = getRouteName(bus.routeName);

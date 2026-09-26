@@ -3,11 +3,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Ship, Clock, Banknote, Anchor,
   Table2, LayoutGrid, Search, CheckCircle, ChevronDown,
+  Eye, X,
 } from "lucide-react";
 import PageBanner from "../components/PageBanner";
 import { useTranslation } from "../context/LanguageContext";
 import useFerries from "../hooks/ferryhook";
 import useDebouncedValue from "../hooks/useDebouncedValue";
+import useResponsiveListView from "../hooks/useResponsiveListView";
 import PaginationControls from "../admin/components/ui/PaginationControls";
 import { formatTime12Hour } from "../utils/time";
 
@@ -34,12 +36,87 @@ function getDuration(dep, arr) {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
+function FerryDetailsModal({ ferry, onClose }) {
+  if (!ferry) return null;
+
+  const routeName = Array.isArray(ferry.routeName)
+    ? ferry.routeName.join(" -> ")
+    : ferry.routeName || "N/A";
+  const timings = Array.isArray(ferry.timings) ? ferry.timings : [];
+  const stops = Array.isArray(ferry.stops) ? ferry.stops : [];
+
+  const rows = [
+    ["Route", routeName],
+    ["Ferry Name", ferry.ferryName || "N/A"],
+    ["Route Number", ferry.routeNumber || "N/A"],
+    ["Fare", ferry.fare === null || ferry.fare === undefined ? "N/A" : `₹${ferry.fare}`],
+    ["Stops", stops.length > 0 ? stops.join(", ") : "N/A"],
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 16 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+      >
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+          <div>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white">{routeName}</h3>
+            <p className="text-sm font-medium text-cyan-600 dark:text-cyan-400">Ferry Details</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="p-5 max-h-[75vh] overflow-y-auto space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {rows.map(([label, value]) => (
+              <div key={label} className="rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 p-3">
+                <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</p>
+                <p className="mt-1 text-sm text-slate-700 dark:text-slate-200 break-words">{value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Scheduled Timings</p>
+            {timings.length > 0 ? (
+              <div className="space-y-2">
+                {timings.map((timing, index) => (
+                  <div key={`${timing.departure}-${timing.arrival}-${index}`} className="grid grid-cols-1 sm:grid-cols-4 gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-200">
+                    <span>#{index + 1}</span>
+                    <span>{formatTime12Hour(timing.departure) || "N/A"}</span>
+                    <span>{formatTime12Hour(timing.arrival) || "N/A"}</span>
+                    <span>{getDuration(timing.departure, timing.arrival)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400 dark:text-slate-500">No timings available.</p>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function Ferry() {
   const { t } = useTranslation();
   const { ferries = [], pagination, refresh } = useFerries();
-  const [view, setView] = useState("table");
+  const [view, setView] = useResponsiveListView();
   const [search, setSearch] = useState("");
   const [routeFilter, setRouteFilter] = useState("");
+  const [detailsFerry, setDetailsFerry] = useState(null);
   const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
   const debouncedSearch = useDebouncedValue(search);
 
@@ -135,13 +212,13 @@ export default function Ferry() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden"
+              className="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden"
             >
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      {["Route Name", "Departure", "Arrival", "Duration", "Fare", "Stops", "Status"].map((h) => (
+                      {["Route Name", "Departure", "Arrival", "Duration", "Fare", "Stops", "Status", "Actions"].map((h) => (
                         <th key={h} className="px-4 py-3 text-left whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -202,6 +279,16 @@ export default function Ferry() {
                               <CheckCircle size={10} /> Active
                             </span>
                           </td>
+                          <td className="px-4 py-3">
+                            <button
+                              type="button"
+                              onClick={() => setDetailsFerry(s)}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
+                              title="View details"
+                            >
+                              <Eye size={14} />
+                            </button>
+                          </td>
                         </motion.tr>
                       );
                     })}
@@ -218,13 +305,13 @@ export default function Ferry() {
           )}
 
           {/* ── CARD VIEW ── */}
-          {view === "card" && (
+          {(view === "card" || view === "table") && (
             <motion.div
               key="cards"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-5"
+              className={`grid grid-cols-1 md:grid-cols-2 gap-5 ${view === "table" ? "md:hidden" : ""}`}
             >
               {filtered.map((s, i) => {
                 const timing = s.timings?.[0];
@@ -292,6 +379,13 @@ export default function Ferry() {
                           ))}
                         </div>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => setDetailsFerry(s)}
+                        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors"
+                      >
+                        <Eye size={14} /> Details
+                      </button>
                     </div>
                   </motion.div>
                 );
@@ -314,6 +408,15 @@ export default function Ferry() {
           />
         </div>
       </div>
+
+      <AnimatePresence>
+        {detailsFerry && (
+          <FerryDetailsModal
+            ferry={detailsFerry}
+            onClose={() => setDetailsFerry(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
