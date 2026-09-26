@@ -455,7 +455,7 @@ export default function Footer() {
                       className="text-primary-500 dark:text-primary-400"
                     />
                   </span>
-                  info@oporajeo.com
+                  info@aporajeo.com
                 </a>
                 <a
                   href={`tel:${PHONE.replace(/\s/g, "")}`}

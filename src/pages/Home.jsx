@@ -23,7 +23,6 @@ import {
   HeartHandshake,
 } from "lucide-react";
 
-
 import AdBanner from "../components/AdBanner";
 import Testimonials from "../components/Testimonials";
 import useDoctors from "../hooks/doctorhook";
@@ -88,8 +87,6 @@ const SLIDES = [
   },
 ];
 
-
-
 const WHY_US = [
   {
     Icon: Shield,
@@ -147,14 +144,22 @@ export default function Home() {
     pagination: emergenciesPagination,
     refresh: refreshEmergencies,
   } = useEmergencyServices();
-  const { buses, pagination: busesPagination, refresh: refreshBuses } = useBuses();
+  const {
+    buses,
+    pagination: busesPagination,
+    refresh: refreshBuses,
+  } = useBuses();
   const {
     ferries,
     pagination: ferriesPagination,
     refresh: refreshFerries,
   } = useFerries();
   const { events, fetchEvents } = useEvents();
-  const { users, pagination: usersPagination, refresh: refreshUsers } = useUsers();
+  const {
+    users,
+    pagination: usersPagination,
+    refresh: refreshUsers,
+  } = useUsers();
 
   useEffect(() => {
     refreshDoctors();
@@ -270,7 +275,6 @@ export default function Home() {
           </motion.div>
         </AnimatePresence>
 
-       
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center py-24">
           <AnimatePresence mode="wait">
             <motion.div
@@ -553,8 +557,6 @@ export default function Home() {
         </div>
       </section>
 
-      
-
       <Testimonials />
 
       {/* ── CTA ── */}
@@ -576,7 +578,11 @@ export default function Home() {
             <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
             <div className="relative z-10 p-10 md:p-16">
               <div className="w-44 sm:w-64 mx-auto mb-8">
-                <img src="/logo.png" alt="Logo" className="w-full h-auto object-contain" />
+                <img
+                  src="/logo.png"
+                  alt="Logo"
+                  className="w-full h-auto object-contain"
+                />
               </div>
               <h2 className="text-3xl sm:text-4xl font-extrabold mb-3">
                 Get in Touch
@@ -594,7 +600,7 @@ export default function Home() {
                   <MessageCircle size={17} /> WhatsApp
                 </a>
                 <a
-                  href="mailto:info@oporajeo.com"
+                  href="mailto:info@aporajeo.com"
                   className="inline-flex items-center justify-center gap-2 bg-white text-primary-700 hover:bg-primary-50 font-bold px-8 py-3.5 rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95"
                 >
                   <Mail size={17} /> Email Us
