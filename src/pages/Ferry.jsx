@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+﻿import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Ship, Clock, Banknote, Anchor,
@@ -29,10 +29,10 @@ function parseTime(timeStr) {
 function getDuration(dep, arr) {
   const dMins = parseTime(dep);
   const aMins = parseTime(arr);
-  if (dMins === null || aMins === null) return "—";
+  if (dMins === null || aMins === null) return "â€”";
   let diff = aMins - dMins;
   if (diff < 0) diff += 1440;
-  if (diff === 0) return "—";
+  if (diff === 0) return "â€”";
   const h = Math.floor(diff / 60), m = diff % 60;
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
@@ -49,7 +49,7 @@ function FerryDetailsModal({ ferry, onClose }) {
     ["Route", routeName],
     ["Ferry Name", ferry.ferryName || "N/A"],
     ["Route Number", ferry.routeNumber || "N/A"],
-    ["Fare", ferry.fare === null || ferry.fare === undefined ? "N/A" : `₹${ferry.fare}`],
+    ["Fare", ferry.fare === null || ferry.fare === undefined ? "N/A" : `â‚¹${ferry.fare}`],
   ];
 
   return (
@@ -57,7 +57,7 @@ function FerryDetailsModal({ ferry, onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+      className="fixed inset-0 z-[20000] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
       onClick={onClose}
     >
       <motion.div
@@ -156,13 +156,13 @@ export default function Ferry() {
   }, [params]);
 
   const routeNames = useMemo(() => {
-    return [...new Set(ferries.map((f) => Array.isArray(f.routeName) ? f.routeName.join(" → ") : f.routeName))].filter(Boolean);
+    return [...new Set(ferries.map((f) => Array.isArray(f.routeName) ? f.routeName.join(" â†’ ") : f.routeName))].filter(Boolean);
   }, [ferries]);
 
   const filtered = useMemo(() => {
     if (!routeFilter) return ferries;
     return ferries.filter((s) => {
-      const rNameFull = Array.isArray(s.routeName) ? s.routeName.join(" → ") : s.routeName;
+      const rNameFull = Array.isArray(s.routeName) ? s.routeName.join(" â†’ ") : s.routeName;
       return rNameFull === routeFilter;
     });
   }, [ferries, routeFilter]);
@@ -190,7 +190,7 @@ export default function Ferry() {
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search by route name or stop…"
+              placeholder="Search by route name or stopâ€¦"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-colors"
@@ -235,7 +235,7 @@ export default function Ferry() {
         ) : (
         <AnimatePresence mode="wait">
 
-          {/* ── TABLE VIEW ── */}
+          {/* â”€â”€ TABLE VIEW â”€â”€ */}
           {view === "table" && (
             <motion.div
               key="table"
@@ -256,7 +256,7 @@ export default function Ferry() {
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {filtered.map((s, i) => {
                       const timing = s.timings?.[0];
-                      const routeName = Array.isArray(s.routeName) ? s.routeName.join(" → ") : s.routeName;
+                      const routeName = Array.isArray(s.routeName) ? s.routeName.join(" â†’ ") : s.routeName;
                       return (
                         <motion.tr
                           key={s._id}
@@ -276,23 +276,23 @@ export default function Ferry() {
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                               <Clock size={12} className="text-cyan-500" />
-                              {formatTime12Hour(timing?.departure) || "—"}
+                              {formatTime12Hour(timing?.departure) || "â€”"}
                             </div>
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                               <Clock size={12} className="text-blue-500" />
-                              {formatTime12Hour(timing?.arrival) || "—"}
+                              {formatTime12Hour(timing?.arrival) || "â€”"}
                             </div>
                           </td>
                           <td className="px-4 py-3">
                             <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-1 rounded-lg">
-                              {timing ? getDuration(timing.departure, timing.arrival) : "—"}
+                              {timing ? getDuration(timing.departure, timing.arrival) : "â€”"}
                             </span>
                           </td>
                           <td className="px-4 py-3">
                               <span className="font-bold text-cyan-600 dark:text-cyan-400">
-                                {s.fare === null || s.fare === undefined ? "N/A" : `₹${s.fare}`}
+                                {s.fare === null || s.fare === undefined ? "N/A" : `â‚¹${s.fare}`}
                               </span>
                           </td>
                           <td className="px-4 py-3">
@@ -334,7 +334,7 @@ export default function Ferry() {
             </motion.div>
           )}
 
-          {/* ── CARD VIEW ── */}
+          {/* â”€â”€ CARD VIEW â”€â”€ */}
           {(view === "card" || view === "table") && (
             <motion.div
               key="cards"
@@ -345,7 +345,7 @@ export default function Ferry() {
             >
               {filtered.map((s, i) => {
                 const timing = s.timings?.[0];
-                const routeName = Array.isArray(s.routeName) ? s.routeName.join(" → ") : s.routeName;
+                const routeName = Array.isArray(s.routeName) ? s.routeName.join(" â†’ ") : s.routeName;
                 return (
                   <motion.div
                     key={s._id}
@@ -389,7 +389,7 @@ export default function Ferry() {
                         <div className="flex items-center gap-1.5">
                           <Banknote size={13} className="text-cyan-500" />
                           <span className="font-bold text-cyan-600 dark:text-cyan-400 text-lg">
-                            {s.fare === null || s.fare === undefined ? "N/A" : `₹${s.fare}`}
+                            {s.fare === null || s.fare === undefined ? "N/A" : `â‚¹${s.fare}`}
                           </span>
                         </div>
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-full">
@@ -453,3 +453,4 @@ export default function Ferry() {
     </div>
   );
 }
+

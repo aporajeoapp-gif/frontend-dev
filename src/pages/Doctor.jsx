@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Stethoscope, MapPin, Phone, Mail,
@@ -12,7 +12,7 @@ import useDebouncedValue from "../hooks/useDebouncedValue";
 import PaginationControls from "../admin/components/ui/PaginationControls";
 import { DOCTOR_SPECIALTIES } from "../constants/doctorSpecialties";
 
-// ── specialty badge ───────────────────────────────────────────────────────────
+// â”€â”€ specialty badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const SPECIALTY_COLORS = {
   Cardiology:    "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300",
@@ -35,7 +35,7 @@ function SpecialtyBadge({ specialty }) {
   );
 }
 
-// ── booking modal ─────────────────────────────────────────────────────────────
+// â”€â”€ booking modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function BookingModal({ doctor, onClose }) {
   if (!doctor) return null;
@@ -44,7 +44,7 @@ function BookingModal({ doctor, onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+      className="fixed inset-0 z-[20000] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
       onClick={onClose}
     >
       <motion.div
@@ -145,7 +145,7 @@ function DetailsModal({ doctor, onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+      className="fixed inset-0 z-[20000] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
       onClick={onClose}
     >
       <motion.div
@@ -194,7 +194,7 @@ function DetailsModal({ doctor, onClose }) {
     </motion.div>
   );
 }
-// ── main page ─────────────────────────────────────────────────────────────────
+// â”€â”€ main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function Doctor() {
   const { doctors = [], pagination, loading, refresh } = useDoctors();
@@ -245,7 +245,7 @@ export default function Doctor() {
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search by name, specialty or location…"
+              placeholder="Search by name, specialty or locationâ€¦"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-colors"
@@ -347,13 +347,13 @@ export default function Doctor() {
                         <td className="px-5 py-3">
                           <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                             <Building size={12} className="text-slate-400 shrink-0" />
-                            {doc.medicalShopLocation?.address || "—"}
+                            {doc.medicalShopLocation?.address || "â€”"}
                           </span>
                         </td>
                         <td className="px-5 py-3">
                           <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                              <Phone size={12} className="text-slate-400 shrink-0" />
-                            {doc.alternatePhone || "—"}
+                            {doc.alternatePhone || "â€”"}
                           </span>
                         </td>
 
@@ -502,6 +502,7 @@ export default function Doctor() {
     </div>
   );
 }
+
 
 
 

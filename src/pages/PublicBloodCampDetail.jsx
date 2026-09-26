@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+﻿import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -426,7 +426,7 @@ export default function PublicBloodCampDetail() {
       {/* Registration Modal */}
       <AnimatePresence>
         {showForm && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[20000] flex items-center justify-center p-4">
              <motion.div 
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
@@ -533,3 +533,4 @@ export default function PublicBloodCampDetail() {
     </div>
   );
 }
+

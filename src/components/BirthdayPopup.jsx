@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Gift, Heart, Sparkles, Cake, PartyPopper } from "lucide-react";
 import fetchUser from "../hooks/userhook";
@@ -38,11 +38,11 @@ export default function BirthdayPopup() {
 
       // If already shown today for this user, don't show again
       if (sessionStorage.getItem(storageKey)) {
-        console.log("🎂 Birthday popup already shown for today.");
+        console.log("ðŸŽ‚ Birthday popup already shown for today.");
         return;
       }
 
-      console.log("🎂 Birthday check initiated for:", profile.name);
+      console.log("ðŸŽ‚ Birthday check initiated for:", profile.name);
 
       try {
         const users = await getBirthdayUsers();
@@ -56,7 +56,7 @@ export default function BirthdayPopup() {
         const celebratesToday = users && users.length > 0;
         
         if (celebratesToday || manualIsBirthday || profile?.isBirthday) {
-          console.log("✅ Birthday detected! Showing popup.");
+          console.log("âœ… Birthday detected! Showing popup.");
           setBirthdayUsers(users || []);
           
           const meInList = users?.find(u => u._id === profile?._id);
@@ -66,7 +66,7 @@ export default function BirthdayPopup() {
           sessionStorage.setItem(storageKey, "true");
         }
       } catch (error) {
-        console.error("❌ Error fetching birthday users:", error);
+        console.error("âŒ Error fetching birthday users:", error);
       }
     };
 
@@ -76,7 +76,7 @@ export default function BirthdayPopup() {
   return (
     <AnimatePresence>
       {show && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[20000] flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -180,3 +180,4 @@ export default function BirthdayPopup() {
     </AnimatePresence>
   );
 }
+
