@@ -424,7 +424,7 @@ export default function Ferry() {
                 {filtered.map((s, i) => {
                   const timing = s.timings?.[0];
                   const routeName = Array.isArray(s.routeName)
-                    ? s.routeName.join(" - ")
+                    ? s.routeName.join(" -> ")
                     : s.routeName;
                   return (
                     <motion.div
