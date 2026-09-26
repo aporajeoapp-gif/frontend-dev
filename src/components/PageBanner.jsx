@@ -9,7 +9,7 @@ export default function PageBanner({
   badge,
 }) {
   return (
-<div className="relative w-[80%] h-32 sm:h-72 overflow-hidden mx-auto mt-5 rounded-2xl">
+    <div className="relative hidden sm:block w-[80%] h-72 overflow-hidden mx-auto mt-5 rounded-2xl">
       {/* Background image */}
       {image && (
         <img

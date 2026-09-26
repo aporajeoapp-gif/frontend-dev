@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageBanner from "../components/PageBanner";
+import ListLoader from "../components/ListLoader";
 import { useBloodCamp } from "../hooks/bloodCampHook";
 import useDebouncedValue from "../hooks/useDebouncedValue";
 import PaginationControls from "../admin/components/ui/PaginationControls";
@@ -186,7 +187,7 @@ export default function BloodDonation() {
         badge="Live to Give · Donate Blood"
       />
 
-      <div className="max-w-7xl mx-auto px-4 py-8 -mt-12 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 py-8 sm:-mt-12 relative z-10">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
           {[
             {
@@ -258,11 +259,7 @@ export default function BloodDonation() {
         </div>
 
         {loading ? (
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-80 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
-              ))}
-           </div>
+          <ListLoader label="Loading blood donation camps..." />
         ) : filtered.length === 0 ? (
           <div className="text-center py-24 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
             <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -281,7 +278,7 @@ export default function BloodDonation() {
           </div>
         )}
 
-        {filtered.length > 0 && (
+        {!loading && filtered.length > 0 && (
           <div className="mt-8">
             <PaginationControls
               pagination={pagination}

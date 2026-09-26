@@ -140,7 +140,7 @@ export default function PublicBloodCampDetail() {
         badge="Community Blood Drive"
       />
 
-      <div className="max-w-7xl mx-auto px-4 -mt-20 relative z-20">
+      <div className="max-w-7xl mx-auto px-4 pt-6 sm:pt-0 sm:-mt-20 relative z-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Main Info */}

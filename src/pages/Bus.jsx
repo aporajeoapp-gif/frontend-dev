@@ -13,6 +13,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import PageBanner from "../components/PageBanner";
+import ListLoader from "../components/ListLoader";
 import useBuses from "../hooks/bushook";
 import useDebouncedValue from "../hooks/useDebouncedValue";
 import useResponsiveListView from "../hooks/useResponsiveListView";
@@ -69,7 +70,7 @@ function getIntermediateStops(bus) {
 }
 
 export default function Bus() {
-  const { buses = [], pagination, refresh } = useBuses();
+  const { buses = [], pagination, loading, refresh } = useBuses();
   const [view, setView] = useResponsiveListView();
   const [search, setSearch] = useState("");
   const [routeFilter, setRouteFilter] = useState("");
@@ -110,9 +111,9 @@ export default function Bus() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col gap-3 sm:flex-row mb-6"
+          className="flex w-full min-w-0 flex-col gap-3 sm:flex-row mb-6"
         >
-          <div className="relative flex-1">
+          <div className="relative w-full min-w-0 sm:flex-1">
             <Search
               size={15}
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
@@ -126,7 +127,7 @@ export default function Bus() {
             />
           </div>
 
-          <div className="relative min-w-[180px]">
+          <div className="relative w-full min-w-0 sm:min-w-[180px]">
             <Navigation
               size={14}
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
@@ -170,6 +171,9 @@ export default function Bus() {
           </div>
         </motion.div>
 
+        {loading ? (
+          <ListLoader label="Loading bus routes..." />
+        ) : (
         <AnimatePresence mode="wait">
           {view === "table" && (
             <motion.div
@@ -395,13 +399,16 @@ export default function Bus() {
             </motion.div>
           )}
         </AnimatePresence>
+        )}
 
+        {!loading && (
         <div className="mt-8">
           <PaginationControls
             pagination={pagination}
             onPageChange={(page) => setParams((current) => ({ ...current, page }))}
           />
         </div>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Stethoscope, MapPin, Phone, Mail,
@@ -6,6 +6,7 @@ import {
   SlidersHorizontal, ChevronDown, Eye,
 } from "lucide-react";
 import PageBanner from "../components/PageBanner";
+import ListLoader from "../components/ListLoader";
 import useDoctors from "../hooks/doctorhook";
 import useDebouncedValue from "../hooks/useDebouncedValue";
 import PaginationControls from "../admin/components/ui/PaginationControls";
@@ -196,14 +197,19 @@ function DetailsModal({ doctor, onClose }) {
 // ── main page ─────────────────────────────────────────────────────────────────
 
 export default function Doctor() {
-  const { doctors = [], pagination, refresh } = useDoctors();
+  const { doctors = [], pagination, loading, refresh } = useDoctors();
 
   const [search, setSearch]       = useState("");
   const [specialty, setSpecialty] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [detailsDoctor, setDetailsDoctor] = useState(null);
-  const [params, setParams] = useState({ page: 1, limit: 12, search: "" });
+  const [params, setParams] = useState({ page: 1, limit: 10, search: "", specialty: "" });
   const debouncedSearch = useDebouncedValue(search);
+
+  const handleSpecialtyChange = (value) => {
+    setSpecialty(value);
+    setParams((current) => ({ ...current, specialty: value, page: 1 }));
+  };
 
   useEffect(() => {
     setParams(p => ({ ...p, search: debouncedSearch, page: 1 }));
@@ -213,18 +219,13 @@ export default function Doctor() {
     refresh(params);
   }, [params]);
 
-  const filtered = useMemo(() => {
-    if (!specialty) return doctors;
-    return doctors.filter((d) => d.specialty === specialty);
-  }, [doctors, specialty]);
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
 
       {/* banner */}
       <PageBanner
         title="Find Doctors"
-        subtitle={`${pagination?.total || filtered.length} verified specialists near you`}
+        subtitle={`${pagination?.total || doctors.length} verified specialists near you`}
         image="https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=1400&auto=format&fit=crop&q=80"
         gradient="from-primary-900/85 via-violet-900/75 to-slate-900/80"
         Icon={Stethoscope}
@@ -237,10 +238,10 @@ export default function Doctor() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row gap-3 mb-6"
+          className="flex w-full min-w-0 flex-col sm:flex-row gap-3 mb-6"
         >
           {/* search input */}
-          <div className="relative flex-1">
+          <div className="relative w-full min-w-0 sm:flex-1">
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
@@ -252,12 +253,12 @@ export default function Doctor() {
           </div>
 
           {/* specialty filter */}
-          <div className="relative">
+          <div className="relative w-full min-w-0 sm:w-auto">
             <SlidersHorizontal size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <select
               value={specialty}
-              onChange={(e) => setSpecialty(e.target.value)}
-              className="h-11 pl-10 pr-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/50 appearance-none transition-colors min-w-[170px]"
+              onChange={(e) => handleSpecialtyChange(e.target.value)}
+              className="h-11 w-full min-w-0 pl-10 pr-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500/50 appearance-none transition-colors sm:min-w-[170px]"
             >
               <option value="" className="bg-white dark:bg-slate-900">All Specialties</option>
               {DOCTOR_SPECIALTIES.map((s) => (
@@ -269,8 +270,11 @@ export default function Doctor() {
         </motion.div>
 
         {/* table */}
-        <AnimatePresence mode="wait">
-          {filtered.length === 0 ? (
+        {loading ? (
+          <ListLoader label="Loading doctors..." />
+        ) : (
+          <AnimatePresence mode="wait">
+            {doctors.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0 }}
@@ -281,7 +285,7 @@ export default function Doctor() {
               <Stethoscope size={40} className="mx-auto mb-3 opacity-30" />
               <p className="text-sm">No doctors found.</p>
             </motion.div>
-          ) : (
+            ) : (
             <motion.div
               key="table"
               initial={{ opacity: 0, y: 10 }}
@@ -302,7 +306,7 @@ export default function Doctor() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {filtered.map((doc, i) => (
+                    {doctors.map((doc, i) => (
                       <motion.tr
                         key={doc._id}
                         initial={{ opacity: 0, x: -6 }}
@@ -383,16 +387,17 @@ export default function Doctor() {
                 </table>
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>
+        )}
 
-        {filtered.length > 0 && (
+        {!loading && doctors.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="grid grid-cols-1 gap-5 md:hidden"
           >
-            {filtered.map((doc, i) => (
+            {doctors.map((doc, i) => (
               <motion.div
                 key={doc._id}
                 initial={{ opacity: 0, y: 16 }}
@@ -466,12 +471,14 @@ export default function Doctor() {
           </motion.div>
         )}
 
+        {!loading && (
         <div className="mt-8">
           <PaginationControls
             pagination={pagination}
             onPageChange={(p) => setParams((prev) => ({ ...prev, page: p }))}
           />
         </div>
+        )}
       </div>
 
       {/* booking modal */}

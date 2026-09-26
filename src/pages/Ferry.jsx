@@ -6,6 +6,7 @@ import {
   Eye, X,
 } from "lucide-react";
 import PageBanner from "../components/PageBanner";
+import ListLoader from "../components/ListLoader";
 import { useTranslation } from "../context/LanguageContext";
 import useFerries from "../hooks/ferryhook";
 import useDebouncedValue from "../hooks/useDebouncedValue";
@@ -43,14 +44,12 @@ function FerryDetailsModal({ ferry, onClose }) {
     ? ferry.routeName.join(" -> ")
     : ferry.routeName || "N/A";
   const timings = Array.isArray(ferry.timings) ? ferry.timings : [];
-  const stops = Array.isArray(ferry.stops) ? ferry.stops : [];
 
   const rows = [
     ["Route", routeName],
     ["Ferry Name", ferry.ferryName || "N/A"],
     ["Route Number", ferry.routeNumber || "N/A"],
     ["Fare", ferry.fare === null || ferry.fare === undefined ? "N/A" : `₹${ferry.fare}`],
-    ["Stops", stops.length > 0 ? stops.join(", ") : "N/A"],
   ];
 
   return (
@@ -92,11 +91,39 @@ function FerryDetailsModal({ ferry, onClose }) {
             {timings.length > 0 ? (
               <div className="space-y-2">
                 {timings.map((timing, index) => (
-                  <div key={`${timing.departure}-${timing.arrival}-${index}`} className="grid grid-cols-1 sm:grid-cols-4 gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-200">
-                    <span>#{index + 1}</span>
-                    <span>{formatTime12Hour(timing.departure) || "N/A"}</span>
-                    <span>{formatTime12Hour(timing.arrival) || "N/A"}</span>
-                    <span>{getDuration(timing.departure, timing.arrival)}</span>
+                  <div
+                    key={`${timing.departure}-${timing.arrival}-${index}`}
+                    className="flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 p-3 text-sm"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-100 dark:bg-cyan-900/30 text-xs font-bold text-cyan-700 dark:text-cyan-300">
+                      #{index + 1}
+                    </span>
+                    <div className="grid min-w-0 flex-1 grid-cols-3 gap-2">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          Depart
+                        </p>
+                        <p className="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">
+                          {formatTime12Hour(timing.departure) || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          Arrive
+                        </p>
+                        <p className="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">
+                          {formatTime12Hour(timing.arrival) || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          Duration
+                        </p>
+                        <p className="mt-0.5 font-semibold text-slate-700 dark:text-slate-200">
+                          {getDuration(timing.departure, timing.arrival)}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -112,7 +139,7 @@ function FerryDetailsModal({ ferry, onClose }) {
 
 export default function Ferry() {
   const { t } = useTranslation();
-  const { ferries = [], pagination, refresh } = useFerries();
+  const { ferries = [], pagination, loading, refresh } = useFerries();
   const [view, setView] = useResponsiveListView();
   const [search, setSearch] = useState("");
   const [routeFilter, setRouteFilter] = useState("");
@@ -157,9 +184,9 @@ export default function Ferry() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row gap-3 mb-6"
+          className="flex w-full min-w-0 flex-col sm:flex-row gap-3 mb-6"
         >
-          <div className="relative flex-1">
+          <div className="relative w-full min-w-0 sm:flex-1">
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
@@ -171,7 +198,7 @@ export default function Ferry() {
           </div>
 
           {/* route filter */}
-          <div className="relative min-w-[180px]">
+          <div className="relative w-full min-w-0 sm:min-w-[180px]">
             <Anchor size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <select
               value={routeFilter}
@@ -203,6 +230,9 @@ export default function Ferry() {
           </div>
         </motion.div>
 
+        {loading ? (
+          <ListLoader label="Loading ferry routes..." />
+        ) : (
         <AnimatePresence mode="wait">
 
           {/* ── TABLE VIEW ── */}
@@ -400,13 +430,16 @@ export default function Ferry() {
           )}
 
         </AnimatePresence>
+        )}
 
+        {!loading && (
         <div className="mt-8">
           <PaginationControls
             pagination={pagination}
             onPageChange={(p) => setParams((prev) => ({ ...prev, page: p }))}
           />
         </div>
+        )}
       </div>
 
       <AnimatePresence>

@@ -17,9 +17,12 @@ export default function useDoctors() {
             } else {
                 setDoctors(response)
             }
+            setError(null)
             return response
         } catch (err) {
             setError(err)
+            setDoctors([])
+            setPagination(null)
         } finally {
             setLoading(false)
         }
