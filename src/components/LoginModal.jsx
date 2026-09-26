@@ -85,7 +85,7 @@ export default function LoginModal({ isOpen, onClose }) {
                   <div className="relative w-20 h-20 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg flex items-center justify-center overflow-hidden">
                     <img
                       src="/logo.png"
-                      alt="Oporajeo"
+                      alt="Aporajeo"
                       className="w-16 h-16 object-contain"
                     />
                   </div>

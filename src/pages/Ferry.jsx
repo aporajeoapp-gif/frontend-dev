@@ -232,7 +232,7 @@ export default function Ferry() {
             />
             <input
               type="text"
-              placeholder="Search by route name or stopâ€¦"
+              placeholder="Search by route name or stop"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-colors"

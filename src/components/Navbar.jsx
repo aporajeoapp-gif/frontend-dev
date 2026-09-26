@@ -47,7 +47,7 @@ export default function Navbar() {
           <Link to="/" className="flex items-center gap-2.5 shrink-0">
             <img
               src="/logo.png"
-              alt="Oporajeo"
+              alt="Aporajeo"
               className="h-7 sm:h-10 w-auto object-contain"
             />
           </Link>

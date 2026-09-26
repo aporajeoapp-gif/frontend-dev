@@ -57,10 +57,14 @@ function CampCard({ camp }) {
       {/* Banner */}
       <div className="relative h-40 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
         {camp.banner_image ? (
-          <img src={camp.banner_image} alt={camp.campName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <img
+            src={camp.banner_image}
+            alt={camp.campName}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-700">
-             <ImageIcon size={48} />
+            <ImageIcon size={48} />
           </div>
         )}
         <div className="absolute top-3 right-3">
@@ -103,7 +107,9 @@ function CampCard({ camp }) {
           </div>
           <div className="flex items-center gap-1.5 col-span-2">
             <MapPin size={12} className="text-rose-400 shrink-0" />
-            <span className="truncate">{camp.location}, {camp.city}</span>
+            <span className="truncate">
+              {camp.location}, {camp.city}
+            </span>
           </div>
         </div>
 
@@ -135,8 +141,8 @@ function CampCard({ camp }) {
 
         <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400">
-             <Heart size={12} className="fill-rose-600" />
-             Join Herd
+            <Heart size={12} className="fill-rose-600" />
+            Join Herd
           </div>
           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-white group-hover:text-rose-600 transition-colors">
             View Details
@@ -152,11 +158,16 @@ export default function BloodDonation() {
   const { camps = [], pagination, loading, fetchCamps } = useBloodCamp();
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [params, setParams] = useState({ page: 1, limit: 12, search: "", status: "" });
+  const [params, setParams] = useState({
+    page: 1,
+    limit: 12,
+    search: "",
+    status: "",
+  });
   const debouncedSearch = useDebouncedValue(search);
 
   useEffect(() => {
-    setParams(p => ({
+    setParams((p) => ({
       ...p,
       search: debouncedSearch,
       status: filter === "all" ? "" : filter,
@@ -171,7 +182,7 @@ export default function BloodDonation() {
   const filtered = [...camps].sort(
     (a, b) =>
       (STATUS_ORDER[a.status] ?? Number.MAX_SAFE_INTEGER) -
-      (STATUS_ORDER[b.status] ?? Number.MAX_SAFE_INTEGER)
+      (STATUS_ORDER[b.status] ?? Number.MAX_SAFE_INTEGER),
   );
 
   const totalDonors = camps.reduce((s, c) => s + (c.donors?.length ?? 0), 0);
@@ -215,7 +226,10 @@ export default function BloodDonation() {
               bg: "bg-white dark:bg-slate-900",
             },
           ].map(({ label, value, color, bg }) => (
-            <div key={label} className={`${bg} rounded-2xl p-5 shadow-sm border border-slate-200/60 dark:border-slate-800/50 text-center transform transition-transform hover:-translate-y-1`}>
+            <div
+              key={label}
+              className={`${bg} rounded-2xl p-5 shadow-sm border border-slate-200/60 dark:border-slate-800/50 text-center transform transition-transform hover:-translate-y-1`}
+            >
               <div className={`text-3xl font-black ${color}`}>{value}</div>
               <div className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
                 {label}
@@ -225,37 +239,44 @@ export default function BloodDonation() {
         </div>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-           <div>
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white">Active Blood Drives</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Current and upcoming donation events in our community.</p>
-           </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-800 dark:text-white">
+              Active Blood Drives
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Current and upcoming donation events in our community.
+            </p>
+          </div>
 
-           <div className="flex-1 max-w-md w-full relative">
-             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-             <input
-               type="text"
-               placeholder="Search by camp name, location..."
-               value={search}
-               onChange={(e) => setSearch(e.target.value)}
-               className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/50 transition-colors"
-             />
-           </div>
-           
-           <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
-             {FILTERS.map((f) => (
-               <button
-                 key={f}
-                 onClick={() => setFilter(f)}
-                 className={`px-5 py-2 rounded-xl text-xs font-bold capitalize whitespace-nowrap transition-all ${
-                   filter === f
-                     ? "bg-rose-600 text-white shadow-lg shadow-rose-900/20"
-                     : "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-rose-400"
-                 }`}
-               >
-                 {f === "all" ? "View All" : f}
-               </button>
-             ))}
-           </div>
+          <div className="flex-1 max-w-md w-full relative">
+            <Search
+              size={15}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+            />
+            <input
+              type="text"
+              placeholder="Search by camp name, location..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500/50 transition-colors"
+            />
+          </div>
+
+          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
+            {FILTERS.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-5 py-2 rounded-xl text-xs font-bold capitalize whitespace-nowrap transition-all ${
+                  filter === f
+                    ? "bg-rose-600 text-white shadow-lg shadow-rose-900/20"
+                    : "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-rose-400"
+                }`}
+              >
+                {f === "all" ? "View All" : f}
+              </button>
+            ))}
+          </div>
         </div>
 
         {loading ? (
@@ -263,11 +284,17 @@ export default function BloodDonation() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-24 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
             <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
-               <Droplets size={32} className="text-slate-300 dark:text-slate-700" />
+              <Droplets
+                size={32}
+                className="text-slate-300 dark:text-slate-700"
+              />
             </div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white">No Camps Found</h3>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+              No Camps Found
+            </h3>
             <p className="text-sm text-slate-400 dark:text-slate-500 max-w-xs mx-auto mt-1">
-              There are currently no blood donation camps matching your selection.
+              There are currently no blood donation camps matching your
+              selection.
             </p>
           </div>
         ) : (
@@ -286,20 +313,30 @@ export default function BloodDonation() {
             />
           </div>
         )}
-        
+
         <div className="mt-16 p-8 rounded-3xl bg-linear-to-br from-slate-900 to-slate-950 border border-slate-800 flex flex-col items-center text-center">
-            <h3 className="text-xl font-bold text-white mb-2">Want to register your own camp?</h3>
-            <p className="text-slate-400 text-sm max-w-lg mb-6">
-              If you are an organization or a volunteer group planning a blood drive, please contact the Oporajeo admin for verification and listing.
-            </p>
-            <div className="flex gap-4">
-               <a href="mailto:contact@oporajeo.org" className="px-6 py-2.5 rounded-xl bg-white text-slate-950 text-sm font-bold hover:bg-slate-100 transition-colors flex items-center gap-2">
-                  <Mail size={16} /> Email Us
-               </a>
-               <a href="tel:+910000000000" className="px-6 py-2.5 rounded-xl bg-slate-800 text-white text-sm font-bold hover:bg-slate-700 transition-colors flex items-center gap-2">
-                  <Phone size={16} /> Call Support
-               </a>
-            </div>
+          <h3 className="text-xl font-bold text-white mb-2">
+            Want to register your own camp?
+          </h3>
+          <p className="text-slate-400 text-sm max-w-lg mb-6">
+            If you are an organization or a volunteer group planning a blood
+            drive, please contact the Aporajeo admin for verification and
+            listing.
+          </p>
+          <div className="flex gap-4">
+            <a
+              href="mailto:contact@Aporajeo.org"
+              className="px-6 py-2.5 rounded-xl bg-white text-slate-950 text-sm font-bold hover:bg-slate-100 transition-colors flex items-center gap-2"
+            >
+              <Mail size={16} /> Email Us
+            </a>
+            <a
+              href="tel:+910000000000"
+              className="px-6 py-2.5 rounded-xl bg-slate-800 text-white text-sm font-bold hover:bg-slate-700 transition-colors flex items-center gap-2"
+            >
+              <Phone size={16} /> Call Support
+            </a>
+          </div>
         </div>
       </div>
     </div>

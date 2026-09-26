@@ -392,7 +392,7 @@ export default function Footer() {
               <div className="flex items-center gap-3 mb-4">
                 <img
                   src="/logo.png"
-                  alt="Oporajeo"
+                  alt="Aporajeo"
                   className="h-16 w-auto object-contain rounded-xl"
                 />
               </div>
@@ -446,7 +446,7 @@ export default function Footer() {
                   </span>
                 </div>
                 <a
-                  href="mailto:info@oporajeo.in"
+                  href="mailto:info@Aporajeo.in"
                   className="flex items-center gap-2.5 text-sm text-slate-500 dark:text-slate-400 hover:text-primary-600 transition-colors"
                 >
                   <span className="w-7 h-7 rounded-lg bg-primary-50 dark:bg-slate-800 flex items-center justify-center shrink-0">
@@ -512,7 +512,7 @@ export default function Footer() {
               data-testid="footer-copyright"
               className="flex items-center gap-1.5"
             >
-              © {new Date().getFullYear()} অপরাজেয় (Oporajeo). Made with
+              © {new Date().getFullYear()} অপরাজেয় (Aporajeo). Made with
               <Heart size={11} className="text-rose-500 fill-rose-500" /> in
               India.
             </p>
